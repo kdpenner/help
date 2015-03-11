@@ -14,7 +14,7 @@ for row in reader:
 
 f.close()
 
-obsids = obsids[3:5]
+obsids = obsids[2:5]
 
 pool_name = raw_input('Enter a pool name:')
 
