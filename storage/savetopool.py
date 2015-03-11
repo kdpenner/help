@@ -14,8 +14,8 @@ dir_pre = dir_pre + append_dir
 out = commands.getstatusoutput('ls '+dir_pre)
 dirs = out[1].split()
 
-common_dirname = raw_input('Enter a string common and exclusive \
-to all downloaded dirs:')
+common_dirname = raw_input('Enter a string common to and unique among \
+all downloaded dirs:')
 pool_name = raw_input('Enter a pool name:')
 
 print 'Searching for '+common_dirname+' in '+str(dirs)
