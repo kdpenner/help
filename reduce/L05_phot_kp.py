@@ -71,7 +71,7 @@ obsids = [1342223836, 1342223837, 1342237224, 1342237225]
 camera = 'blue'
 obses = []
 for obsid in obsids:
-    result = getObservation(obsid, poolName = 'local_gama151')
+    result = getObservation(obsid, poolName = 'gama151')
     obses.append(result)
 
 # ***********************************************************************************
@@ -170,7 +170,7 @@ for obs in obses[0:1]:
 # Save the slicedFrames to ObservationContext (overwrite !)
     obs = savePhotProductToObsContextL05(obs, "HPPT" , camera, slicedFrames)
 
-    saveObservation(obs, poolName = 'local_gama151')
+    saveObservation(obs, poolName = 'gama151')
 
 #
 # delete some variables
