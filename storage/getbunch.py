@@ -20,5 +20,5 @@ pool_name = raw_input('Enter a pool name:')
 
 for obsid in obsids:
   print 'Getting '+obsid+' and storing in '+pool_name
-  obs = getObservation(obsid, useHsa = True)
+  obs = getObservation(obsid, instrument = 'PACS', useHsa = True)
   saveObservation(obs, poolName = pool_name, saveCalTree = True)
