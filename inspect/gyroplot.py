@@ -1,52 +1,45 @@
-import os
+#!/usr/bin/python -tt
 
-def gyroplot(poolname):
+import sys
+import math
+import numpy
+import matplotlib.pyplot as plot
+import itertools
+import re
 
-  obses = getallobscontexts(poolname)
+def main():
 
-  for obs in obses:
+  filename = sys.argv[1]
+  
+  if not filename:
+    print 'Filename is required argument.'
+    sys.exit(1)
 
-    strobsid = str(obs.obsid)
+  data = numpy.genfromtxt(filename, names=True)
 
-    try:
-      probs = getpointcol(obs.auxiliary.pointing, 'obt', 'gyroAttProbX', 'gyroAttProbY', 'gyroAttProbZ')
-    except IndexError:
-      print 'You must run calcAttitude on obsid '+strobsid
-    else:
-      start = obs.level1.refs['HPPAVGB'].product.refs[0].product['Status']['FINETIME'].data[0]
-      end = obs.level1.refs['HPPAVGB'].product.refs[0].product['Status']['FINETIME'].data[-1]
+  plot.rcParams['figure.figsize'] = [7.32, 7.32]
+#  plot.rcParams['font.sans-serif'] = ['Helvetica']
+  plot.rcParams['axes.color_cycle'] = ['#d95f02', '#7570b3', '#1b9e77']
+  markers = itertools.cycle(('o', '^', 'D'))
 
-      times = tuple(probs['obt'])
+  data['obt'] = (data['obt']-data['obt'][0])/1.e6
 
-      filename = poolname+'_'+strobsid+'gyro.dat'
-      sortedkeys = sorted(probs.keys(), reverse = True)
+  for column in data.dtype.names:
+    if column != 'obt':
+      plot.plot(data['obt'], data[column], marker = markers.next(), \
+      linestyle = '', label = column)
 
-      f = open(filename, 'wb')
-      f.write(' '.join(sortedkeys) + '\n')
+  plot.xlabel('Time')
+  plot.ylabel('Probability that fit is good')
+  ymin, ymax = plot.ylim()
+  plot.ylim(ymax = (ymax - ymin)*1.1+ymin)
+  plot.legend(loc = 'lower right', prop = {'size': 18}, numpoints = 1)
 
-      i = 0
+  savename = '.'.join(filename.split('.')[:-1])
+  
+  plot.savefig(savename+'.eps')
 
-      for j in range(len(times)):
-        if (times[j] > end or times[j] < start):
-          for key in probs.keys():
-#       print i
-#       print j
-#       print 'deleting ', j-i
-            del probs[key][j-i]
-          i = i + 1
-        else:
-          writestr = ''
-          for key in sortedkeys:
-            writestr = writestr + ' ' + str(probs[key][j-i])
-          f.write(writestr + '\n')
+  plot.close()
 
-      f.close()
-
-      print 'Wrote output file '+os.getcwd()+'/'+filename
-
-  return
-
-#plot = PlotXY()
-#layer = LayerXY(Double1d(probs['obt']), Double1d(probs['gyroAttProbX']))
-#layer.setLine(0)
-#plot.addLayer(layer)
+if __name__ == '__main__':
+  main()
