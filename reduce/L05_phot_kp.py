@@ -83,9 +83,9 @@ def L05_phot_kp(obs, camera):
     camera = 'blue'
 
   pp = obs.auxiliary.pointing
-  try pp.history:
+  if pp.history:
     print 'You must not run calcAttitude twice on an observation.'
-  except:
+  else:
 
 
 # add extra meta data 
