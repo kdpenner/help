@@ -67,12 +67,7 @@ from herschel.ia.dataset          import LongParameter
 from herschel.pacs.spg.all        import *
 from herschel.pacs.spg.pipeline.SaveProductToObservationContext import *
 
-obsids = [1342223836, 1342223837, 1342237224, 1342237225]
-camera = 'blue'
-obses = []
-for obsid in obsids:
-    result = getObservation(obsid, poolName = 'gama151')
-    obses.append(result)
+def L05_phot_kp(obs, camera):
 
 # ***********************************************************************************
 # Preparation
@@ -83,12 +78,16 @@ for obsid in obsids:
 #    red or blue camera? This the user has to set before running the script, using the command e.g.
 #       > camera = "blue" 
 #    the try/except here will set the camera to "blue" if it has not already been defined
-try:
-    camera
-except NameError:
+
+  if not camera:
     camera = 'blue'
 
-for obs in obses[0:1]:
+  pp = obs.auxiliary.pointing
+  try pp.history:
+    print 'You must not run calcAttitude twice on an observation.'
+  except:
+
+
 # add extra meta data 
     pacsEnhanceMetaData(obs)
 
@@ -98,16 +97,15 @@ for obs in obses[0:1]:
 #
 # ------------------------------------------------------------------------------------
 # Extract out the level0 from the ObservationContext
-    level0   = PacsContext(obs.level0)
+    level0 = PacsContext(obs.level0)
 #
 # Extract Time Correlation which is used to convert in addUtc
     timeCorr = obs.auxiliary.timeCorrelation
 #
 # Extract the PointingProduct
-    pp       = obs.auxiliary.pointing
-    acms     = obs.auxiliary.acms
-    tchist   = obs.auxiliary.teleCommHistory
-    newpp    = calcAttitude(pp, acms, tchist)
+    acms = obs.auxiliary.acms
+    tchist = obs.auxiliary.teleCommHistory
+    newpp = calcAttitude(pp, acms, tchist)
     obs.auxiliary.pointing = newpp
 #
 # ------------------------------------------------------------------------------------
@@ -115,11 +113,11 @@ for obs in obses[0:1]:
 # This product is available since bulk re processing with HCSS4.1
     horizonsProduct = obs.auxiliary.horizons
 #
-    orbitEphem      = obs.auxiliary.orbitEphemeris
+    orbitEphem = obs.auxiliary.orbitEphemeris
 #
 # ------------------------------------------------------------------------------------
 # Extract the calibration tree 
-    calTree      = obs.calibration
+    calTree = obs.calibration
 #
 # interactive user: apply following:
 #calTree = getCalTree(obs=obs)
@@ -160,8 +158,8 @@ for obs in obses[0:1]:
 #
 #
 # The meta keyward repFactor is needed as this is a slice criteria for PointSource observations
-    if (not slicedFrames.meta.containsKey("repFactor")) : 
-        slicedFrames.meta["repFactor"] = LongParameter(1)
+    if (not slicedFrames.meta.containsKey("repFactor")):
+      slicedFrames.meta["repFactor"] = LongParameter(1)
 #
 #
 # Re-slice the data to level-0.5 conventions
@@ -170,7 +168,9 @@ for obs in obses[0:1]:
 # Save the slicedFrames to ObservationContext (overwrite !)
     obs = savePhotProductToObsContextL05(obs, "HPPT" , camera, slicedFrames)
 
-    saveObservation(obs, poolName = 'gama151')
+    poolname = level0.getCamera(camera).averaged.product.refs[0].urn.split(':')[1]
+
+    saveObservation(obs, poolName = poolname)
 
 #
 # delete some variables

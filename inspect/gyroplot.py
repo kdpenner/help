@@ -7,13 +7,7 @@ import matplotlib.pyplot as plot
 import itertools
 import re
 
-def main():
-
-  filename = sys.argv[1]
-  
-  if not filename:
-    print 'Filename is required argument.'
-    sys.exit(1)
+def gyroplot(filename):
 
   data = numpy.genfromtxt(filename, names=True)
 
@@ -27,7 +21,7 @@ def main():
   for column in data.dtype.names:
     if column != 'obt':
       plot.plot(data['obt'], data[column], marker = markers.next(), \
-      linestyle = '', label = column)
+      linestyle = '', label = column, fillstyle = 'none')
 
   plot.xlabel('Time')
   plot.ylabel('Probability that fit is good')
@@ -35,11 +29,23 @@ def main():
   plot.ylim(ymax = (ymax - ymin)*1.1+ymin)
   plot.legend(loc = 'lower right', prop = {'size': 18}, numpoints = 1)
 
-  savename = '.'.join(filename.split('.')[:-1])
+  savename = '.'.join(filename.split('.')[:-1])+'.eps'
   
-  plot.savefig(savename+'.eps')
+  plot.savefig(savename)
 
   plot.close()
+  
+  print 'Plot is here: '+savename
+
+def main():
+
+  filename = sys.argv[1]
+  
+  if not filename:
+    print 'Filename is required argument.'
+    sys.exit(1)
+
+  gyroplot(filename)
 
 if __name__ == '__main__':
   main()
