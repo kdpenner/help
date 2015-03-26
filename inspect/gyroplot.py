@@ -39,13 +39,14 @@ def gyroplot(filename):
 
 def main():
 
-  filename = sys.argv[1]
+  filenames = sys.argv[1:]
   
-  if not filename:
+  if not filenames:
     print 'Filename is required argument.'
     sys.exit(1)
-
-  gyroplot(filename)
+  else:
+    for filename in filenames:
+      gyroplot(filename)
 
 if __name__ == '__main__':
   main()
