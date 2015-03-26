@@ -87,7 +87,7 @@ def L05_phot_kp(obs, camera):
     print 'You must not run calcAttitude twice on an observation.'
   else:
   
-    poolname = level0.getCamera(camera).averaged.product.refs[0].urn.split(':')[1]
+    poolname = obs.level0.getCamera(camera).averaged.product.refs[0].urn.split(':')[1]
 
 # add extra meta data 
     pacsEnhanceMetaData(obs)
