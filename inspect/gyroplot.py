@@ -6,6 +6,9 @@ import numpy
 import matplotlib.pyplot as plot
 import itertools
 import re
+import subprocess
+import os
+import glob
 
 def gyroplot(filename):
 
@@ -40,7 +43,7 @@ def gyroplot(filename):
 def main():
 
   filenames = sys.argv[1:]
-  
+ 
   if not filenames:
     print 'Filename is required argument.'
     sys.exit(1)
