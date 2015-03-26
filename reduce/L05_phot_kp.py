@@ -86,7 +86,8 @@ def L05_phot_kp(obs, camera):
   if pp.history:
     print 'You must not run calcAttitude twice on an observation.'
   else:
-
+  
+    poolname = level0.getCamera(camera).averaged.product.refs[0].urn.split(':')[1]
 
 # add extra meta data 
     pacsEnhanceMetaData(obs)
@@ -167,8 +168,6 @@ def L05_phot_kp(obs, camera):
 #
 # Save the slicedFrames to ObservationContext (overwrite !)
     obs = savePhotProductToObsContextL05(obs, "HPPT" , camera, slicedFrames)
-
-    poolname = level0.getCamera(camera).averaged.product.refs[0].urn.split(':')[1]
 
     saveObservation(obs, poolName = poolname)
 
