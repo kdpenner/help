@@ -5,25 +5,24 @@ import math
 import numpy
 import matplotlib.pyplot as plot
 import itertools
-import re
 
 def gyroplot(filename):
 
   data = numpy.genfromtxt(filename, names=True)
 
-  plot.rcParams['figure.figsize'] = [7.32, 7.32]
+  plot.rcParams['figure.figsize'] = [7.32*math.sqrt(2), 7.32]
 #  plot.rcParams['font.sans-serif'] = ['Helvetica']
   plot.rcParams['axes.color_cycle'] = ['#d95f02', '#7570b3', '#1b9e77']
   markers = itertools.cycle(('o', '^', 'D'))
 
-  data['obt'] = (data['obt']-data['obt'][0])/1.e6
+  data['obt'] = (data['obt']-data['obt'][0])/1.e6/60.
 
   for column in data.dtype.names:
     if column != 'obt':
       plot.plot(data['obt'], data[column], marker = markers.next(), \
       linestyle = '', label = column, fillstyle = 'none')
 
-  plot.xlabel('Time')
+  plot.xlabel('Time (minutes)')
   plot.ylabel('Probability that fit is good')
   ymin, ymax = plot.ylim()
   plot.ylim(ymax = (ymax - ymin)*1.1+ymin)
