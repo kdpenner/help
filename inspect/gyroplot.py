@@ -1,4 +1,4 @@
-#!/usr/bin/python -tt
+#!/usr/bin/env python -tt
 
 import sys
 import math
@@ -20,13 +20,13 @@ def gyroplot(filename):
   for column in data.dtype.names:
     if column != 'obt':
       plot.plot(data['obt'], data[column], marker = markers.next(), \
-      linestyle = '', label = column, fillstyle = 'none')
+      label = column, fillstyle = 'none')
 
-  plot.xlabel('Time (minutes)')
-  plot.ylabel('Probability that fit is good')
   ymin, ymax = plot.ylim()
   plot.ylim(ymax = (ymax - ymin)*1.1+ymin)
-  plot.legend(loc = 'lower right', prop = {'size': 18}, numpoints = 1)
+  plot.xlabel('Time (minutes)')
+  plot.ylabel('Probability that fit is good')
+  plot.legend(loc = 'lower right')
 
   savename = '.'.join(filename.split('.')[:-1])+'.eps'
   
