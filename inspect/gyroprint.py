@@ -1,4 +1,5 @@
 import os
+from bisect import bisect_left
 from herschel.pacs.spg.common import filterOnScanSpeed
 
 def gyroprint(poolname):
@@ -39,8 +40,12 @@ def gyroprint(poolname):
           lowscanspeed  = 8.
           highscanspeed = 12.
 
+      print 'Running filterOnScanSpeed'
+
       addscan = filterOnScanSpeed(frame, lowScanSpeed = lowscanspeed, \
       highScanSpeed = highscanspeed)
+      
+      print 'Finished with filter'
 
       scanmask = addscan['Mask']['ScanSpeedMask'].data[0,0,:]
 
@@ -59,26 +64,15 @@ def gyroprint(poolname):
 
 #      i = 0
 
-      for j in range(len(times)):
-        if (times[j] > end or times[j] < start):
-#          for key in probs.keys():
-#       print i
-#       print j
-#       print 'deleting ', j-i
-#            del probs[key][j-i]
-#          i = i + 1
-          pass
-        else:
+      for j in xrange(len(times)):
+        if (times[j] < end and times[j] > start):
+#          scantimesdiff = probs['obt'][j]-scantimes
+#          scantimesdiff.abs()
+#          scantimesindex = scantimesdiff.where(scantimesdiff == \
+#          min(scantimesdiff)).toInt1d()[0]
+          scantimesindex = bisect_left(scantimes, probs['obt'][j])
 
-          scantimesdiff = probs['obt'][j]-scantimes
-          scantimesdiff.abs()
-          scantimesindex = scantimesdiff.where(scantimesdiff == \
-          min(scantimesdiff)).toInt1d()[0]
-
-          if scanmask[scantimesindex] is True:
-            pass
-          else:
-
+          if scanmask[scantimesindex] is False:
             writestr = ''
             for key in sortedkeys:
               writestr = writestr + ' ' + str(probs[key][j])
@@ -87,10 +81,3 @@ def gyroprint(poolname):
       f.close()
 
       print 'Wrote output file '+os.getcwd()+'/'+filename
-
-  return
-
-#plot = PlotXY()
-#layer = LayerXY(Double1d(probs['obt']), Double1d(probs['gyroAttProbX']))
-#layer.setLine(0)
-#plot.addLayer(layer)
