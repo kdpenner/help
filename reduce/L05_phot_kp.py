@@ -69,19 +69,6 @@ from herschel.pacs.spg.pipeline.SaveProductToObservationContext import *
 
 def L05_phot_kp(obs, camera):
 
-# ***********************************************************************************
-# Preparation
-# ***********************************************************************************
-#
-# ------------------------------------------------------------------------------------
-# SETUP 1: 
-#    red or blue camera? This the user has to set before running the script, using the command e.g.
-#       > camera = "blue" 
-#    the try/except here will set the camera to "blue" if it has not already been defined
-
-  if not camera:
-    camera = 'blue'
-
   pp = obs.auxiliary.pointing
   if pp.history:
     print 'You must not run calcAttitude twice on an observation.'

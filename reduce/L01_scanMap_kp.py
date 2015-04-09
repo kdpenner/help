@@ -59,46 +59,26 @@ from herschel.pacs.share.util     import PacsProductSinkWrapper
 from herschel.pacs.spg.common     import correctRaDec4Sso
 from herschel.pacs.spg.pipeline.SaveProductToObservationContext import *
 
-obsids = [1342223836, 1342223837, 1342237224, 1342237225]
-camera = 'blue'
-obses = []
-for obsid in obsids:
-    result = getObservation(obsid, poolName = 'gama151')
-    obses.append(result)
+def L01_scanMap_kp(obs, camera):
 
-#
-# ***********************************************************************************
-# Preparation
-# ***********************************************************************************
-#
-# ------------------------------------------------------------------------------------
-# SETUP 1: 
-#    red or blue camera? This the user has to set before running the script, using the command e.g.
-#       > camera = "blue" 
-#    the try/except here will set the camera to "blue" if it has not already been defined
-try:
-    camera
-except NameError:
-    camera = 'blue'
-
-for obs in obses:
-#
 # ------------------------------------------------------------------------------------
 # Extract out the level0 from the ObservationContext
-    level0     = PacsContext(obs.level0)
-    level0_5   = PacsContext(obs.level0_5)
-    frames     = level0_5.averaged.getCamera(camera).product.copy()
-    photHk     = level0.hk.product.refs[0].product["HPPHKS"]
-# 
-    timeCorr        = obs.auxiliary.timeCorrelation
-    pp              = obs.auxiliary.pointing
-    orbitEphem      = obs.auxiliary.orbitEphemeris
-    horizonsProduct = obs.auxiliary.horizons
-    sso             = isSolarSystemObject(obs)
+  level0 = PacsContext(obs.level0)
+  level0_5 = PacsContext(obs.level0_5)
+  frames = level0_5.averaged.getCamera(camera).product.copy()
+  photHk = level0.hk.product.refs[0].product["HPPHKS"]
+#
+  poolname = obs.level0.getCamera(camera).averaged.product.refs[0].urn.split(':')[1]
+#
+  timeCorr = obs.auxiliary.timeCorrelation
+  pp = obs.auxiliary.pointing
+  orbitEphem = obs.auxiliary.orbitEphemeris
+  horizonsProduct = obs.auxiliary.horizons
+  sso = isSolarSystemObject(obs)
 #
 # ------------------------------------------------------------------------------------
 # Extract the calibration tree 
-    calTree      = getCalTree(obs = obs)
+  calTree = getCalTree(obs=obs)
 #
 # interactive user: you may apply following e.g. to get the most recent calibration
 #calTree = getCalTree(obs=obs)
@@ -109,7 +89,7 @@ for obs in obses:
 # ***********************************************************************************
 #
 # Filter the slew to target from the data
-    frames = filterSlew(frames)
+  frames = filterSlew(frames)
 #
 # Find the major blockjs of this observation and organize it in the block table attached to the Frames
 #frames = findBlocks(frames, calTree=calTree)
@@ -124,38 +104,38 @@ for obs in obses:
 # Flag the pixel which are flagged as "bad" in a Mask : BADPIXELS
 # Bad pixel are specified in a calibration file : PCalPhotometer_BadPixelMask_FM_vx.fits (for x set the version number)
 # During this step also the calibration block is removed by setting Task parameter : scical="sci",keepall=False
-    frames = photFlagBadPixels(frames, calTree=calTree, scical="sci",keepall=0,copy=1)
+  frames = photFlagBadPixels(frames, calTree=calTree, scical="sci", keepall=0, copy=1)
 #
 # The phenomenon of electronic crosstalk was identified, in particular in the
 # red bolometer (column 0 of any bolometer) subarray, during the testing phase 
 # and it is still present in in-flight data. We reccommend to flag those pixels
 # in order to remove artifacts  from your map.
-    frames = photMaskCrosstalk(frames)
+  frames = photMaskCrosstalk(frames)
 
 #  Flag saturated pixel in a Mask : SATURATION_HIGH and SATURATION_LOW (SATURATION just contains both merged)
-    frames = photFlagSaturation(frames, calTree=calTree, hkdata=photHk)
+  frames = photFlagSaturation(frames, calTree=calTree, hkdata=photHk)
 #
 #
 # Convert digital units to Volts
-    frames = photConvDigit2Volts(frames, calTree=calTree)
+  frames = photConvDigit2Volts(frames, calTree=calTree)
 # 
 #
 # Add the Utc column to the status table (not used in further processing)
-    frames = addUtc(frames, timeCorr)
+  frames = addUtc(frames, timeCorr)
 #
 #
 # Calculates the chopper position angle with respect to the optical axis of the focal plane unit 
 # in degrees and add the Status parameter CHOPFPUANGLE 
-    frames = convertChopper2Angle(frames, calTree=calTree)
+  frames = convertChopper2Angle(frames, calTree=calTree)
 #
 # Converts Volt signal to Jansky and applies flat correction
 # PCalPhotometer_Responsivity_FM_vx.fits and PCalPhotometer_FlatField_FM_vx.fits (for x set the version number)
-    frames = photRespFlatfieldCorrection(frames, calTree = calTree)
+  frames = photRespFlatfieldCorrection(frames, calTree=calTree)
 #
 # Apply the non linearity correction to take care of 
 # flux deviations in the measurement of bright sources 
-    frames = photOffsetCorr(frames)
-    frames = photNonLinearityCorrection(frames, calTree = calTree)
+  frames = photOffsetCorr(frames)
+  frames = photNonLinearityCorrection(frames, calTree=calTree)
 #
 # Add the pointing information to the status word of the frames class
 # The frames finetime (status entry) is used to find the related information in the PointingProduct 
@@ -164,8 +144,8 @@ for obs in obses:
 #
 # Move SSO target to a fixed position in sky. This is needed for mapping.
 #
-    if (sso):
-        frames = correctRaDec4Sso(frames, timeOffset=0, orbitEphem=orbitEphem, horizonsProduct=horizonsProduct, linear=0)
+  if (sso):
+    frames = correctRaDec4Sso(frames, timeOffset=0, orbitEphem=orbitEphem, horizonsProduct=horizonsProduct, linear=0)
 #
 # Assign RA and Dec position for every individual pixel
 # Use PCalPhotometer_SubArrayArray_FM_vx.fits (for x set the version number)
@@ -183,12 +163,12 @@ for obs in obses:
 #
 #
 # Apply the Phot evaporator temperature correction
-    frames = photTevCorrection(frames, calTree=calTree, hk=photHk)
+  frames = photTevCorrection(frames, calTree=calTree, hk=photHk)
 #
 #
-    obs = savePhotProductToObsContextL1(obs, "HPPT" , camera, frames)
+  obs = savePhotProductToObsContextL1(obs, "HPPT" , camera, frames)
 
-    saveObservation(obs, poolName = 'gama151')
+  saveObservation(obs, poolName = poolname)
 
 # Remove some variables
-    del level0, level0_5, frames, photHk, timeCorr, pp, orbitEphem, horizonsProduct, sso
+  del level0, level0_5, frames, photHk, timeCorr, pp, orbitEphem, horizonsProduct, sso

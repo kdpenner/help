@@ -22,7 +22,8 @@ def gyroplotbk(filename):
   p = figure(tools = 'wheel_zoom, box_zoom, box_select, reset, save', \
   x_axis_label = 'Time (minutes)', \
   y_axis_label = 'Probability that fit is good', \
-  title = 'calcAttitude probabilities')
+  title = 'calcAttitude probabilities', \
+  plot_width = int(700*math.sqrt(2)), plot_height = 700)
 
   for column in data.dtype.names:
     if column != 'obt':
