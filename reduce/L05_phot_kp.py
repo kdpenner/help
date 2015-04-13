@@ -66,6 +66,7 @@ from herschel.pacs.cal            import GetPacsCalDataTask
 from herschel.ia.dataset          import LongParameter
 from herschel.pacs.spg.all        import *
 from herschel.pacs.spg.pipeline.SaveProductToObservationContext import *
+import os
 
 def L05_phot_kp(obs, camera):
 
@@ -73,7 +74,25 @@ def L05_phot_kp(obs, camera):
   if pp.history:
     print 'You must not run calcAttitude twice on an observation.'
   else:
-  
+
+    c1 = LocalStoreContext()
+    c1_pre = c1.getStoreDir().toString()
+
+    dir_pre = c1_pre.split('.hcss/')[0]+'oldpoint/'
+
+    if not os.path.exists(dir_pre):
+      print 'Creating directory:'
+      print dir_pre
+      print 'for old pointing products'
+      os.mkdir(dir_pre)
+      print 'Saving old pointing product to:'
+      print dir_pre+str(obs.obsid)+'oldpp.fits'
+      simpleFitsWriter(pp, dir_pre+str(obs.obsid)+'oldpp.fits')
+    else:
+      print 'Saving old pointing product to:'
+      print dir_pre+str(obs.obsid)+'oldpp.fits'
+      simpleFitsWriter(pp, dir_pre+str(obs.obsid)+'oldpp.fits')
+
     poolname = obs.level0.getCamera(camera).averaged.product.refs[0].urn.split(':')[1]
 
 # add extra meta data 
