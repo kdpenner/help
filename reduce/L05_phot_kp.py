@@ -56,22 +56,26 @@ History :
   2009-09-24 EkW Operational version
 
 """
-from herschel.pacs.spg            import *
-from herschel.pacs.spg.common     import *
-from herschel.pacs.spg.phot       import *
-from herschel.pacs.spg.pipeline   import *
+from herschel.pacs.spg import *
+from herschel.pacs.spg.common import *
+from herschel.pacs.spg.phot import *
+from herschel.pacs.spg.pipeline import *
 from herschel.pacs.signal.context import *
-from herschel.pacs.signal         import SlicedFrames
-from herschel.pacs.cal            import GetPacsCalDataTask
-from herschel.ia.dataset          import LongParameter
-from herschel.pacs.spg.all        import *
+from herschel.pacs.signal import SlicedFrames
+from herschel.pacs.cal import GetPacsCalDataTask
+from herschel.ia.dataset import LongParameter
+from herschel.pacs.spg.all import *
 from herschel.pacs.spg.pipeline.SaveProductToObservationContext import *
+from herschel.ia.toolbox.util import SimpleFitsWriterTask
+from herschel.ia.toolbox.pointing import CalcAttitudeTask
 import os
+simpleFitsWriter = SimpleFitsWriterTask()
+calcAttitude = CalcAttitudeTask()
 
 def L05_phot_kp(obs, camera):
 
   pp = obs.auxiliary.pointing
-  if pp.history:
+  if 'calcAttitude' in pp.history.getTaskNames().toString():
     print 'You must not run calcAttitude twice on an observation.'
   else:
 
@@ -87,11 +91,11 @@ def L05_phot_kp(obs, camera):
       os.mkdir(dir_pre)
       print 'Saving old pointing product to:'
       print dir_pre+str(obs.obsid)+'oldpp.fits'
-      simpleFitsWriter(pp, dir_pre+str(obs.obsid)+'oldpp.fits')
+      simpleFitsWriter(product = pp, file = dir_pre+str(obs.obsid)+'oldpp.fits')
     else:
       print 'Saving old pointing product to:'
       print dir_pre+str(obs.obsid)+'oldpp.fits'
-      simpleFitsWriter(pp, dir_pre+str(obs.obsid)+'oldpp.fits')
+      simpleFitsWriter(product = pp, file = dir_pre+str(obs.obsid)+'oldpp.fits')
 
     poolname = obs.level0.getCamera(camera).averaged.product.refs[0].urn.split(':')[1]
 

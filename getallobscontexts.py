@@ -1,6 +1,11 @@
+from herschel.ia.pal import ProductStorage
+from herschel.ia.pal import PoolManager
+from herschel.ia.pal.query import MetaQuery
+from herschel.ia.obs import ObservationContext
+
 def getallobscontexts(poolname):
 
-  query = ProductStorage([PoolManager.getPool(poolname)]).select(herschel.ia.pal.query.MetaQuery(herschel.ia.obs.ObservationContext, "p", "1"))
+  query = ProductStorage([PoolManager.getPool(poolname)]).select(MetaQuery(ObservationContext, "p", "1"))
 
   obscontexts = []
 
