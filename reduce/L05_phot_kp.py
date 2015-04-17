@@ -75,7 +75,13 @@ calcAttitude = CalcAttitudeTask()
 def L05_phot_kp(obs, camera):
 
   pp = obs.auxiliary.pointing
-  if 'calcAttitude' in pp.history.getTaskNames().toString():
+  
+  try:
+    pphist = pp.history.getTaskNames().toString()
+  except:
+    pphist = [None]
+
+  if 'calcAttitude' in pphist:
     print 'You must not run calcAttitude twice on an observation.'
   else:
 
