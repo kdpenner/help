@@ -5,6 +5,8 @@ from herschel.ia.obs import ObservationContext
 
 def getallobscontexts(poolname):
 
+  """Retrieves all of the observation IDs saved to the pool named 'poolname'"""
+
   query = ProductStorage([PoolManager.getPool(poolname)]).select(MetaQuery(ObservationContext, "p", "1"))
 
   obscontexts = []

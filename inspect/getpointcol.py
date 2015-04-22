@@ -2,7 +2,8 @@ def getpointcol(pointprod, *args):
 
   keys = pointprod.keySet().toArray()
 
-  keys.pop()
+  if keys[-1] == 'History':
+    keys.pop()
 
   if not args:
 
