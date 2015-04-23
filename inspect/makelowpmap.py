@@ -7,8 +7,8 @@ def makelowpmap(obs, probthresh):
 
   Use this routine to inspect maps from a division of the data by pointing
   probability.  Three maps are made: one for data with a pointing prob >
-  probthresh; one for data with a pointing prob < probthres; and a difference
-  map (> probthresh minus < probthresh).
+  probthresh; one for data with a pointing prob < probthresh; and a difference
+  map (< probthresh minus > probthresh).
 
   Inputs:
   obs -- an observation context
