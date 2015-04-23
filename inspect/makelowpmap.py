@@ -1,5 +1,12 @@
+from herschel.ia.numeric import Bool3d
 from herschel.ia.toolbox.util import SimpleFitsWriterTask
+from herschel.ia.toolbox.image import ImageSubtractTask
+from herschel.pacs.spg.phot import PhotProjectTask
+from getpointcol import getpointcol
+from gyroprint import findprobsforscantimes
 simpleFitsWriter = SimpleFitsWriterTask()
+imageSubtract = ImageSubtractTask()
+photProject = PhotProjectTask()
 
 def makelowpmap(obs, probthresh):
 
