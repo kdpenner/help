@@ -1,3 +1,3 @@
-from gyroprint import findprobsforscantimes
+from findprobsforscantimes import findprobsforscantimes
 from getpointcol import getpointcol
 from makelowpmap import makelowpmap
