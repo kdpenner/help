@@ -1,46 +1,9 @@
 import os
 from bisect import bisect_left
-from herschel.pacs.spg.common import filterOnScanSpeed
 from findprobsforscantimes import findprobsforscantimes
-
-def runfilteronscanspeed(frame):
-
-  """Runs filterOnScanSpeed
-
-  Input:
-  frame -- a level 1 frame.
-
-  Output:
-  The level 1 frame.  It should have a Mask dataset named 'ScanSpeedMask'.
-  """
-
-  try:
-    speed = frame.meta['mapScanRate'].value
-  except IndexError:
-    speed = frame.meta['mapScanSpeed'].value
-
-#  print speed
-
-  if speed == 'slow' or speed == 'medium':
-    lowscanspeed  = 15.
-    highscanspeed = 25.
-  elif speed == 'fast' or speed == 'high':
-    lowscanspeed  = 54.
-    highscanspeed = 66.
-  elif speed == 'low':
-    lowscanspeed  = 8.
-    highscanspeed = 12.
-
-#  print lowscanspeed, highscanspeed
-
-#  print 'Running filterOnScanSpeed'
-
-  addscanframe = filterOnScanSpeed(frame, lowScanSpeed = lowscanspeed, \
-                                   highScanSpeed = highscanspeed)
-
-#  print 'Finished with filter'
-
-  return(addscanframe)
+from help import getallobscontexts
+from getpointcol import getpointcol
+from help.reduce import runfilteronscanspeed
 
 def gyroprint(poolname):
 
