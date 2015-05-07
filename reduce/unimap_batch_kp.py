@@ -9,6 +9,7 @@ from help import getallobscontexts
 from datetime import datetime
 import os
 import sys
+import shutil
 from herschel.ia.pal.pool.lstore import LocalStoreContext
 
 from herschel.ia.gui.apps.plugin import PluginRegistry
@@ -28,58 +29,56 @@ def unimap_batch_kp(poolname):
 
   obses = getallobscontexts(poolname)
 
+  for obs in obses:
+
 ######### PARAMETER SETTING ##########
 
 ### GENERAL PARAMETERS
 # 1. obsidList (MANDATORY) : a list of obsids
 
-  obsidList = []
-
-  for obs in obses:
-
-    obsidList.append(obs.obsid)
+    obsidList = [obs.obsid]
 
 # 2. tag: the name to associate to the unihipe run (e.g "run_april_15", if not set the default is obsid1_obsid2)
 
-  runtime = str(datetime.now().date())
+    runtime = str(datetime.now().date())
 
-  tag = runtime+'-'+poolname
+    tag = runtime+'-'+poolname
 
 # 3. inOutDir (MANDATORY): the output directory where the unihipe and unimap products will be saved 
 
-  c1 = LocalStoreContext()
-  c1_pre = c1.getStoreDir().toString()
+    c1 = LocalStoreContext()
+    c1_pre = c1.getStoreDir().toString()
 
-  dir_pre = c1_pre.split('.hcss/')[0]
+    dir_pre = c1_pre.split('.hcss/')[0]
 
-  inOutDir = dir_pre+'unimap'
+    inOutDir = dir_pre+'unimap'
 
-  if not os.path.exists(inOutDir):
-    try:
-      os.makedirs(inOutDir)
-    except OSError:
-      print 'Could not make directory', inOutDir
-      sys.exit(1)
+    if not os.path.exists(inOutDir):
+      try:
+        os.makedirs(inOutDir)
+      except OSError:
+        print 'Could not make directory', inOutDir
+        sys.exit(1)
 
 # 4. instrument (MANDATORY): select between SPIRE and PACS
 
-  instrument = "PACS"
+    instrument = "PACS"
 
 # 5. batchExec (default False): select it to exec the task in batch mode. If is set and store is set to 
 #    Local Directory you have to provide a list of directory where the level1 fits files are stored using
 #    location parameter
 
-  batchExec = True
+    batchExec = True
 
 # 6. execUniHipe (default True): select it to execute the preprocess of level1 data for unimap. 
 #     If set, you have to provide also values for the specific UniHipe parameters.
 
-  execUniHipe = True 
+    execUniHipe = True 
 
 # 7. execUnimap (default False): select it to execute also the UNIMAP process and the maps are generated.
 #    If set, you have to provide also values for the specific UNIMAP parameters.
 
-  execUnimap = False
+    execUnimap = False
 
 ### UNIHIPE PARAMETERS
 ## UniHipe converts standard SPIRE and PACS data to values valid as input for UniMap mapmaking.
@@ -91,7 +90,7 @@ def unimap_batch_kp(poolname):
 #    - pacs_red: convert level1 PACS red band
 #    - pacs_blue convert level1 PACS blue band
 
-  type = "pacs_blue"
+    type = "pacs_blue"
 
 # 9. store: where the data to convert are stored. Possible values are:
 #    - Local Store: the products are stored in the HIPE Local Store
@@ -102,7 +101,7 @@ def unimap_batch_kp(poolname):
 #      select the directories using the GUI interface. Otherwise you have to provide a list of directories using the 
 #      "location" parameter (see below).
 
-  store = "Local Store"
+    store = "Local Store"
 
 # 10.  location: if store is set to Local Store you can use this parameter to provide the name of the local store. If
 #      store is set to Local Directory, you have to provide a list of directory (separated by a comma; where the level1 data are stored.
@@ -158,6 +157,9 @@ def unimap_batch_kp(poolname):
 
 ########TASK Execution #############
 
-  uniHipe(obsidList = obsidList, execUniHipe = execUniHipe, \
-  execUniMap = execUnimap, batchExec = batchExec, inOutDir = inOutDir, \
-  type = type, instrument = instrument, store = store, tag = tag)
+    uniHipe(obsidList = obsidList, execUniHipe = execUniHipe, \
+    execUniMap = execUnimap, batchExec = batchExec, inOutDir = inOutDir, \
+    type = type, instrument = instrument, store = store, tag = tag)
+    
+    shutil.move(inOutDir+'/'+tag+'/blue/unimap_meta_blue.dat', \
+    inOutDir+'/'+tag+'/blue/unimap_meta_blue'+str(obsidList[0])+'.dat')
