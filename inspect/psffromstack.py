@@ -114,38 +114,79 @@ def plotpsf(psfsimpleavg, psfsimplemed, psfshiftmed, psfsplinemed):
   
   return
   
-def plotpsffit(psf):
+def fitpsf(psf, *center):
 
-  amplitude = psf.max()
-  y_mean, x_mean = numpy.unravel_index(psf.argmax(), psf.shape)
+  fixed = {}
+  bounds = {}
+
+  if not center:
+  
+    amplitude = psf.max()
+    y_center, x_center = numpy.unravel_index(psf.argmax(), psf.shape)
+    fixed['x_mean'] = False
+    fixed['y_mean'] = False
+    bounds['x_stddev'] = [0., psf.shape[1]]
+    bounds['y_stddev'] = [0., psf.shape[0]]
+    
+  else:
+  
+    amplitude = psf[center[1], center[0]]
+    x_center = center[0]
+    y_center = center[1]
+    fixed['x_mean'] = True
+    fixed['y_mean'] = True
+    bounds['x_stddev'] = [0., psf.shape[1]]
+    bounds['y_stddev'] = [0., psf.shape[0]]
+
+
   x_stddev = 3./2.35
   y_stddev = 3./2.35
   theta = 0
   
-  p_init = models.Gaussian2D(amplitude = amplitude, x_mean = x_mean, \
-  y_mean = y_mean, x_stddev = x_stddev, y_stddev = y_stddev, \
-  theta = theta)
+  p_init = models.Gaussian2D(amplitude = amplitude, x_mean = x_center, \
+  y_mean = y_center, x_stddev = x_stddev, y_stddev = y_stddev, \
+  theta = theta, fixed = fixed, bounds = bounds)
   
   fit_p = fitting.LevMarLSQFitter()
+  
+  gridy, gridx = numpy.mgrid[0:psf.shape[0]:1, 0:psf.shape[1]:1]
+  
+  p = fit_p(p_init, gridx, gridy, psf)
+  
+  return p
+  
+def plotpsffit(psf, fit = None):
+
   gridy, gridx = numpy.mgrid[0:psf.shape[0]:1, 0:psf.shape[1]:1]
 
-  p = fit_p(p_init, gridx, gridy, psf)
+  if not fit:
+    p = fitpsf(psf)
+  else:
+    p = fit
   
   for outparam in p.param_names:
     print outparam, '{0:.4f}'.format(getattr(p, outparam).value)
 
   psfmin = psf.min()
+  psfmax = psf.max()
 
   plt.subplot(221)
-  plt.imshow(psf, vmin = psfmin, vmax = amplitude, origin = 'lower')
+  plt.imshow(psf, vmin = psfmin, vmax = psfmax, origin = 'lower')
   plt.colorbar()
   plt.subplot(222)
-  plt.imshow(p(gridx, gridy), vmin = psfmin, vmax = amplitude, origin = 'lower')
+  plt.imshow(p(gridx, gridy), vmin = psfmin, vmax = psfmax, origin = 'lower')
   plt.colorbar()
   plt.subplot(223)
   plt.imshow(psf - p(gridx, gridy), origin = 'lower')
   plt.colorbar()
   plt.show()
+  
+#  plt.plot(psf[9, :], 'ro')
+#  plt.plot(p(gridx, gridy)[9, :], 'k--')
+#  plt.show()
+  
+#  plt.plot(psf[9, :] - p(gridx, gridy)[9, :], 'ro')
+#  plt.show()
   
   return
   
