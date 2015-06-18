@@ -79,37 +79,39 @@ def getstack(xlocs, ylocs, numpixs, img):
 
   return extracts, extracts_shift, extracts_bispline
 
-def psffromstack(catradec, imgfile, extent_arcsec):
+def psffromstack(simple, shift, spline, method):
 
-  xlocs, ylocs, numpixs, img = translatetopix(catradec, imgfile, extent_arcsec)
+  if method == 'mean':
+    psfsimple = numpy.average(simple, axis = 2)
+    psfshift = numpy.average(shift, axis = 2)
+    psfspline = numpy.average(spline, axis = 2)
+  elif method == 'median':
+    psfsimple = numpy.median(simple, axis = 2)
+    psfshift = numpy.median(shift, axis = 2)
+    psfspline = numpy.median(spline, axis = 2)
+    
+  return psfsimple, psfshift, psfspline
+  
+def plotpsf(*psfs):
+  
+  numpsfs = len(psfs)
+  
+  psfmax = numpy.max(psfs[0])
+  psfmin = numpy.min(psfs[0])
+  
+  ndim = numpy.int(numpy.ceil(numpy.sqrt(numpsfs)))
+  
+  if numpsfs % ndim == 0:
+    ndims = [numpsfs/ndim, ndim]
+  else:
+    ndims = [ndim, ndim]
+  
+  for i in xrange(0, numpsfs):
+    plt.subplot(ndims[0], ndims[1], i+1)
+    plt.imshow(psfs[i], vmin = psfmin, vmax = psfmax, origin = 'lower')
+    plt.colorbar()
 
-  simple, shift, spline = getstack(xlocs, ylocs, numpixs, img)
-  
-  psfsimpleavg = numpy.average(simple, axis = 2)
-  psfsimplemed = numpy.median(simple, axis = 2)
-  psfshiftmed = numpy.median(shift, axis = 2)
-  psfsplinemed = numpy.median(spline, axis = 2)
-  
-  return psfsimpleavg, psfsimplemed, psfshiftmed, psfsplinemed
-  
-def plotpsf(psfsimpleavg, psfsimplemed, psfshiftmed, psfsplinemed):
-  
-  psfmax = numpy.max(psfsimpleavg)
-  psfmin = numpy.min(psfsimpleavg)
-  
-  plt.subplot(221)
-  plt.imshow(psfsimpleavg, vmin = psfmin, vmax = psfmax, origin = 'lower')
-  plt.colorbar()
-  plt.subplot(222)
-  plt.imshow(psfsimplemed, vmin = psfmin, vmax = psfmax, origin = 'lower')
-  plt.colorbar()
-  plt.subplot(223)
-  plt.imshow(psfshiftmed, vmin = psfmin, vmax = psfmax, origin = 'lower')
-  plt.colorbar()
-  plt.subplot(224)
-  plt.imshow(psfsplinemed, vmin = psfmin, vmax = psfmax, origin = 'lower')
-  plt.colorbar()
-  plt.gcf().set_size_inches(17, 17)
+  plt.gcf().set_size_inches(ndims[0]*8.5, ndims[1]*8.5)
   plt.show()
   
   return
@@ -208,11 +210,28 @@ def main():
   imgfname = home+'/Documents/validatemap/xmmlss/'+\
   'HerMES_PACS_level6_XMM_LSS_SWIRE_100um_EdoIbar_Unimap_img_wgls.fits'
 
-  simpleavg, simplemed, shiftmed, splinemed = psffromstack(catradec, imgfname, 18)
-  plotpsf(simpleavg, simplemed, shiftmed, splinemed)
+  xlocs, ylocs, numpixs, img = translatetopix(catradec, imgfname, 18)
+
+  simple, shift, spline = getstack(xlocs, ylocs, numpixs, img)
+
+  simplemed, shiftmed, splinemed = psffromstack(simple, shift, spline, 'median')
+  simpleavg, shiftavg, splineavg = psffromstack(simple, shift, spline, 'mean')
+  plotpsf(simplemed, shiftmed, splinemed, simpleavg, shiftavg, splineavg)
   plotpsffit(simplemed)
-  plotpsffit(shiftmed)
+  shiftmedfit = fitpsf(shiftmed)
+  
+#  shiftmedfit.amplitude = 1./2./numpy.pi/shiftmedfit.x_stddev/shiftmedfit.y_stddev
+#  gridy, gridx = numpy.mgrid[0:19:1, 0:19:1]
+#  shiftmedfit.x_mean = 9.
+#  shiftmedfit.y_mean = 9.
+#  writepsf = shiftmedfit(gridx, gridy)
+#  hdu = fits.PrimaryHDU(writepsf)
+#  hdu.writeto('shiftmedpsf.fits')
+  
+  plotpsffit(shiftmed, fit = shiftmedfit)
   plotpsffit(splinemed)
+  
+  plotpsffit(simpleavg)
 
 if __name__ == "__main__":
   main()
