@@ -62,6 +62,7 @@ from herschel.pacs.spg.pipeline.SaveProductToObservationContext import *
 from herschel.ia.toolbox.util import SimpleFitsWriterTask
 from herschel.ia.toolbox.pointing import CalcAttitudeTask
 import os
+from herschel.pacs.cal.all import getCalTree
 simpleFitsWriter = SimpleFitsWriterTask()
 calcAttitude = CalcAttitudeTask()
 
@@ -75,7 +76,11 @@ def L05_phot_kp(obs, camera):
     pphist = [None]
 
   if 'calcAttitude' in pphist:
+
     print 'You must not run calcAttitude twice on an observation.'
+    
+    poolname = obs.level0.getCamera(camera).averaged.product.refs[0].urn.split(':')[1]
+
   else:
 
     c1 = LocalStoreContext()
@@ -105,10 +110,6 @@ def L05_phot_kp(obs, camera):
     pacsPropagateMetaKeywords(obs,'0',obs.level0)
 
 #
-# ------------------------------------------------------------------------------------
-# Extract out the level0 from the ObservationContext
-    level0 = PacsContext(obs.level0)
-#
 # Extract Time Correlation which is used to convert in addUtc
     timeCorr = obs.auxiliary.timeCorrelation
 #
@@ -119,22 +120,26 @@ def L05_phot_kp(obs, camera):
     obs.auxiliary.pointing = newpp
 #
 # ------------------------------------------------------------------------------------
+# Extract out the level0 from the ObservationContext
+  level0 = PacsContext(obs.level0)
+#
+# ------------------------------------------------------------------------------------
 # Extract Horizons product which is need by SSO observations
 # This product is available since bulk re processing with HCSS4.1
-    horizonsProduct = obs.auxiliary.horizons
+  horizonsProduct = obs.auxiliary.horizons
 #
-    orbitEphem = obs.auxiliary.orbitEphemeris
+  orbitEphem = obs.auxiliary.orbitEphemeris
 #
 # ------------------------------------------------------------------------------------
 # Extract the calibration tree 
-    calTree = obs.calibration
+  calTree = getCalTree(obs = obs)
 #
 # interactive user: apply following:
 #calTree = getCalTree(obs=obs)
 #
 #
 # ------------------------------------------------------------------------------------
-    slicedFrames = SlicedFrames(level0.getCamera(camera).averaged.product)
+  slicedFrames = SlicedFrames(level0.getCamera(camera).averaged.product)
 #
 # ***********************************************************************************
 # Processing 
@@ -148,38 +153,39 @@ def L05_phot_kp(obs, camera):
 # Central focal plane coordinates  : RaArray, DecArray, PaArray 
 #
 # !!! Attention copy =1 is needed not to work straight on level 0 data !!!
-    slicedFrames = photAddInstantPointing(slicedFrames, newpp, calTree=calTree, orbitEphem=orbitEphem, horizonsProduct=horizonsProduct, copy=1)
+
+  slicedFrames = photAddInstantPointing(slicedFrames, obs.auxiliary.pointing, calTree=calTree, orbitEphem=orbitEphem, horizonsProduct=horizonsProduct, copy=1)
 #
 # Identify the calibration blocks and fills the CALSOURCE status entry. 
 # This task has been introduced because only the labels are no longer a reliable source of information. 
 # Here also the chopper position and BBTYPE are taken into account.
-    slicedFrames = detectCalibrationBlock(slicedFrames)
+  slicedFrames = detectCalibrationBlock(slicedFrames)
 #
 #
 # Remove calibration blocks 
 # We remove the calibration blocks, because due to commanding error very early scans are interrupted
 # by calibratyion blocks. Before and after is considered a separate slice then.
 # This is deactivated this way and the whole data appear in one slice
-    slicedFrames = removeCalBlocks(slicedFrames,useBbid=1)
+  slicedFrames = removeCalBlocks(slicedFrames,useBbid=1)
 #
 #
 # FindBlocks need to run to make the block table which is used by pacsSliceContext then
-    slicedFrames = findBlocks(slicedFrames, calTree=calTree)
+  slicedFrames = findBlocks(slicedFrames, calTree=calTree)
 #
 #
 # The meta keyward repFactor is needed as this is a slice criteria for PointSource observations
-    if (not slicedFrames.meta.containsKey("repFactor")):
-      slicedFrames.meta["repFactor"] = LongParameter(1)
+  if (not slicedFrames.meta.containsKey("repFactor")):
+    slicedFrames.meta["repFactor"] = LongParameter(1)
 #
 #
 # Re-slice the data to level-0.5 conventions
-    slicedFrames, other = pacsSliceContext(slicedFrames, level='0.5')
+  slicedFrames, other = pacsSliceContext(slicedFrames, level='0.5')
 #
 # Save the slicedFrames to ObservationContext (overwrite !)
-    obs = savePhotProductToObsContextL05(obs, "HPPT" , camera, slicedFrames)
+  obs = savePhotProductToObsContextL05(obs, "HPPT" , camera, slicedFrames)
 
-    saveObservation(obs, poolName = poolname)
+  saveObservation(obs, poolName = poolname)
 
 #
 # delete some variables
-    del level0, timeCorr, pp, horizonsProduct, orbitEphem, slicedFrames, other
+  del level0, pp, horizonsProduct, orbitEphem, slicedFrames, other
