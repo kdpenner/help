@@ -10,6 +10,7 @@ from scipy.interpolate import RectBivariateSpline
 from scipy.ndimage.interpolation import shift
 from astropy.modeling import models, fitting
 from os.path import expanduser
+from pdb import set_trace
 
 def translatetopix(catradec, imgfile, extent_arcsec):
 
@@ -32,6 +33,9 @@ def translatetopix(catradec, imgfile, extent_arcsec):
 
 def getstack(xlocs, ylocs, numpixs, img):
   
+  xlocs = numpy.atleast_1d(xlocs)
+  ylocs = numpy.atleast_1d(ylocs)
+  
   xgrids = numpy.round(xlocs)
   ygrids = numpy.round(ylocs)
 
@@ -46,33 +50,42 @@ def getstack(xlocs, ylocs, numpixs, img):
 
   for i in xrange(xlocs.size):
   
-    if img.data[ylocs[i]+.5, xlocs[i]+.5] == img.data[ygrids[i], xgrids[i]]:
+    try:
 
       extract = img.data[ygrids[i]-numpixs[0]:ygrids[i]+numpixs[0], \
       xgrids[i]-numpixs[1]:xgrids[i]+numpixs[1]]
+      
+      if not numpy.isnan(extract.sum()):
+        
 
-      x = numpy.arange(2*numpixs[0])
-      y = numpy.arange(2*numpixs[1])
+        x = numpy.arange(2*numpixs[0])
+        y = numpy.arange(2*numpixs[1])
 
-      f = RectBivariateSpline(x, y, extract)
+        f = RectBivariateSpline(x, y, extract)
 
-      ynew = numpy.arange(ylocs[i]-ygrids[i], ylocs[i]-ygrids[i]+2*numpixs[0], 1)
-      xnew = numpy.arange(xlocs[i]-xgrids[i], xlocs[i]-xgrids[i]+2*numpixs[1], 1)
+        ynew = numpy.arange(ylocs[i]-ygrids[i], ylocs[i]-ygrids[i]+2*numpixs[0], 1)
+        xnew = numpy.arange(xlocs[i]-xgrids[i], xlocs[i]-xgrids[i]+2*numpixs[1], 1)
 
 #    obsgrid = numpy.mgrid[0:2*numpixs[0]:1, 0:2*numpixs[1]:1]
 
 #    wantgrid = numpy.mgrid[ylocs[i]-ygrids[i]:(ylocs[i]-ygrids[i]+2*numpixs[0]):1, \
 #    xlocs[i]-xgrids[i]:(xlocs[i]-xgrids[i]+2*numpixs[1]):1]
 
-      result1 = shift(extract, [ygrids[i]-ylocs[i], xgrids[i]-xlocs[i]], \
-      mode = 'nearest')
-      result2 = f(ynew, xnew)
+        result1 = shift(extract, [ygrids[i]-ylocs[i], xgrids[i]-xlocs[i]], \
+        mode = 'nearest')
+        result2 = f(ynew, xnew)
       
-      extracts[:,:,i] = extract
-      extracts_shift[:,:,i] = result1
-      extracts_bispline[:,:,i] = result2
+        extracts[:,:,i] = extract
+        extracts_shift[:,:,i] = result1
+        extracts_bispline[:,:,i] = result2
+        
+      else:
       
-    else:
+        extracts[:,:,i] = numpy.nan
+        extracts_shift[:,:,i] = numpy.nan
+        extracts_bispline[:,:,i] = numpy.nan
+      
+    except:
     
       print 'Error'
       raise
@@ -82,13 +95,13 @@ def getstack(xlocs, ylocs, numpixs, img):
 def psffromstack(simple, shift, spline, method):
 
   if method == 'mean':
-    psfsimple = numpy.average(simple, axis = 2)
-    psfshift = numpy.average(shift, axis = 2)
-    psfspline = numpy.average(spline, axis = 2)
+    psfsimple = numpy.nanmean(simple, axis = 2)
+    psfshift = numpy.nanmean(shift, axis = 2)
+    psfspline = numpy.nanmean(spline, axis = 2)
   elif method == 'median':
-    psfsimple = numpy.median(simple, axis = 2)
-    psfshift = numpy.median(shift, axis = 2)
-    psfspline = numpy.median(spline, axis = 2)
+    psfsimple = numpy.nanmedian(simple, axis = 2)
+    psfshift = numpy.nanmedian(shift, axis = 2)
+    psfspline = numpy.nanmedian(spline, axis = 2)
     
   return psfsimple, psfshift, psfspline
   
@@ -210,9 +223,20 @@ def main():
   imgfname = home+'/Documents/validatemap/xmmlss/'+\
   'HerMES_PACS_level6_XMM_LSS_SWIRE_100um_EdoIbar_Unimap_img_wgls.fits'
 
-  xlocs, ylocs, numpixs, img = translatetopix(catradec, imgfname, 18)
+#  imgfname = home+'/Documents/validatemap/xmmlss/'+\
+#  'HerMES_PACS_level4_UDS_100um_EdoIbar_Unimap_img_wgls.fits'
 
-  simple, shift, spline = getstack(xlocs, ylocs, numpixs, img)
+  xlocs, ylocs, numpixs, img = translatetopix(catradec, imgfname, 18)
+  
+  mask = (numpy.round(xlocs) > numpixs[1]) & \
+  (numpy.round(xlocs) < img.shape[1]-numpixs[1]) & \
+  (numpy.round(ylocs) < img.shape[0]-numpixs[0]) & \
+  (numpy.round(ylocs) > numpixs[0])
+  
+  xlocs1 = xlocs[mask]
+  ylocs1 = ylocs[mask]
+
+  simple, shift, spline = getstack(xlocs1, ylocs1, numpixs, img)
 
   simplemed, shiftmed, splinemed = psffromstack(simple, shift, spline, 'median')
   simpleavg, shiftavg, splineavg = psffromstack(simple, shift, spline, 'mean')
@@ -232,6 +256,8 @@ def main():
   plotpsffit(splinemed)
   
   plotpsffit(simpleavg)
+
+#  set_trace()
 
 if __name__ == "__main__":
   main()
