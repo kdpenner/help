@@ -25,7 +25,7 @@ from plugin import UniHipeTask
 
 uniHipe = UniHipeTask()
 
-def unimap_batch_kp(poolname):
+def unimap_batch_kp(poolname, camera):
 
   obses = getallobscontexts(poolname)
 
@@ -90,7 +90,7 @@ def unimap_batch_kp(poolname):
 #    - pacs_red: convert level1 PACS red band
 #    - pacs_blue convert level1 PACS blue band
 
-    type = "pacs_blue"
+    type = "pacs_"+camera
 
 # 9. store: where the data to convert are stored. Possible values are:
 #    - Local Store: the products are stored in the HIPE Local Store
@@ -161,5 +161,5 @@ def unimap_batch_kp(poolname):
     execUniMap = execUnimap, batchExec = batchExec, inOutDir = inOutDir, \
     type = type, instrument = instrument, store = store, tag = tag)
     
-    shutil.move(inOutDir+'/'+tag+'/blue/unimap_meta_blue.dat', \
-    inOutDir+'/'+tag+'/blue/unimap_meta_blue'+str(obsidList[0])+'.dat')
+    shutil.move(inOutDir+'/'+tag+'/'+camera+'/unimap_meta_'+camera+'.dat', \
+    inOutDir+'/'+tag+'/'+camera+'/unimap_meta_'+camera+str(obsidList[0])+'.dat')
