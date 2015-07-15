@@ -157,7 +157,7 @@ def unimap_batch_kp(poolname, camera):
 
 ########TASK Execution #############
 
-    uniHipe(obsidList = obsidList, execUniHipe = execUniHipe, \
+    uniHipe(obsidList = obsidList, poolName = poolname, execUniHipe = execUniHipe, \
     execUniMap = execUnimap, batchExec = batchExec, inOutDir = inOutDir, \
     type = type, instrument = instrument, store = store, tag = tag)
     
