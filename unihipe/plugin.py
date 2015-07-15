@@ -106,6 +106,10 @@ class UniHipeTask(Task, ExternalHelp):
 		p = TaskParameter('obsidList',valueType = List, type = IN, \
 			mandatory = True, description = "Obsid 1 to process.")
 		self.addTaskParameter(p)
+
+   		p = TaskParameter('poolName',valueType = String, type = IN, \
+			mandatory = True, description = "name of pool with obsIDs")
+		self.addTaskParameter(p)
 		
 		p = TaskParameter('tag',valueType = String,type = IN, \
 			mandatory = False, description = "Name identifies the run.")
@@ -206,7 +210,7 @@ class UniHipeTask(Task, ExternalHelp):
 	
 	def getGroups(self):
 		return ParameterGroups(self, [
-		Group("Main", "Main parameters", ["obsidList",  "tag","inOutDir", "instrument", "batchExec", "execUniHipe", "execUniMap"]),
+		Group("Main", "Main parameters", ["obsidList",  "poolName", "tag","inOutDir", "instrument", "batchExec", "execUniHipe", "execUniMap"]),
 		Group("UniHipe", "Options for UniHIpe inputs", [ "type",  "store", "location", "updateCal"]),
 		Group("Unimap", "Unimap's options", ["mcrDir", "unimapDir", "spireArray", "pacsArray", "filterSize","noiseFilterType", "startImage", "wglsDThreshold", "wglsGThreshold", "loadWglsImage" ])
 		])
@@ -254,6 +258,7 @@ class UniHipeTask(Task, ExternalHelp):
 		if (self.execUniMap): 
 			listArray = self.getArray(instrument) 
 		obsids = self.obsidList
+		poolname = self.poolName
 		n_obsids=len(obsids)
 		database=self.store
 		
@@ -294,7 +299,7 @@ class UniHipeTask(Task, ExternalHelp):
 			
 			for obsid in obsids:
 				if (database == 'HSA' or database == "Local Store"):
-					obs=getObservation(int(obsid), useHsa=useHsa, instrument=instrument)
+					obs=getObservation(int(obsid), useHsa=useHsa, instrument=instrument,poolName = poolname)
 					startDate = obs.meta['startDate'].time
 					spg = obs.meta['creator'].string[4:len(obs.meta['creator'].string)]
 					if instrument == 'SPIRE':
