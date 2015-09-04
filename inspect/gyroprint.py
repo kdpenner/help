@@ -5,15 +5,17 @@ from help import getallobscontexts
 from getpointcol import getpointcol
 from help.reduce import runfilteronscanspeed
 
-def gyroprint(poolname):
+def gyroprint(poolname, rm_turnaround = True):
 
   """Prints gyro probabilities in pointing products to text files
 
-  Gyro probabilities are removed at times when Herschel is turning around.
-  Probabilities are in the level 0.5 product but the turn-around mask is placed
-  in the level 1 product.  So the level 1 frame must already exist; do not run
-  this routine on an observation context missing the level 1 frame.  An
-  unfortunate dependency.
+
+  By default gyro probabilities are removed at times when Herschel is turning
+  around.  Probabilities are in the level 0.5 product but the turn-around mask
+  is placed in the level 1 product.  So the level 1 frame must already exist;
+  do not run this routine on an observation context missing the level 1 frame.
+  An unfortunate dependency.  Set rm_turnaround = False to print all gyro
+  probabilities.
 
   Input:
   poolname -- the pool name.
@@ -42,12 +44,6 @@ def gyroprint(poolname):
 
       frame = obs.level1.refs['HPPAVGB'].product.refs[0].product
 
-      addscan = runfilteronscanspeed(frame)
-      
-      scanmask = addscan['Mask']['ScanSpeedMask'].data[0,0,:]
-
-      scantimes = frame['Status']['FINETIME'].data
-
       filename = poolname+'_'+strobsid+'gyro.dat'
 
       sortedkeys = sorted(probs.keys(), reverse = True)
@@ -55,32 +51,51 @@ def gyroprint(poolname):
       f = open(filename, 'wb')
       f.write(' '.join(sortedkeys) + '\n')
 
-      # prepare to run findprobsforscantimes in opposite sense
+      if rm_turnaround:
 
-      obsstart = scantimes[0]
-      obsend = scantimes[-1]
+        addscan = runfilteronscanspeed(frame)
+      
+        scanmask = addscan['Mask']['ScanSpeedMask'].data[0,0,:]
 
-      probstartindex = bisect_left(probs['obt'], obsstart)
+        scantimes = frame['Status']['FINETIME'].data
+
+
+        # prepare to run findprobsforscantimes in opposite sense
+
+        obsstart = scantimes[0]
+        obsend = scantimes[-1]
+
+        probstartindex = bisect_left(probs['obt'], obsstart)
 #      print probstartindex
-      probendindex = bisect_left(probs['obt'], obsend)
+        probendindex = bisect_left(probs['obt'], obsend)
 #      print probendindex
 
-      for key in probs.iterkeys():
-        probs[key] = probs[key][probstartindex:probendindex]
+        for key in probs.iterkeys():
+          probs[key] = probs[key][probstartindex:probendindex]
 
-      probtimes = probs['obt']
+        probtimes = probs['obt']
 
-      scandict = {'obt': scantimes, 'scanmask': scanmask}
+        scandict = {'obt': scantimes, 'scanmask': scanmask}
 
-      matchedprobs = findprobsforscantimes(probtimes, scandict)
+        matchedprobs = findprobsforscantimes(probtimes, scandict)
 
-      for k, scanstatus in enumerate(matchedprobs['scanmask']):
-        if scanstatus is False:
+        for k, scanstatus in enumerate(matchedprobs['scanmask']):
+          if scanstatus is False:
+            writestr = ''
+            for key in sortedkeys:
+              writestr = writestr + ' ' + str(probs[key][k])
+            f.write(writestr + '\n')
+
+        f.close()
+        
+      else:
+      
+        for k, obstime in enumerate(probs['obt']):
           writestr = ''
           for key in sortedkeys:
             writestr = writestr + ' ' + str(probs[key][k])
           f.write(writestr + '\n')
-
-      f.close()
+          
+        f.close()
 
       print 'Wrote output file '+os.getcwd()+'/'+filename
