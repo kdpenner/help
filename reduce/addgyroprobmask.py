@@ -16,38 +16,42 @@ def addgyroprobmask(obs, camera, probthresh = 1.e-4):
   level1 = PacsContext(obs.level1)
 
   frames = level1.averaged.getCamera(camera).product.getScience(0)
+
+  if not frames.containsMask('badprobs'):
   
-  scantimes = frames['Status']['FINETIME'].data
+    scantimes = frames['Status']['FINETIME'].data
 
-  probs = getpointcol(obs.auxiliary.pointing, 'obt', 'gyroAttProbX', \
-                      'gyroAttProbY', 'gyroAttProbZ')
+    probs = getpointcol(obs.auxiliary.pointing, 'obt', 'gyroAttProbX', \
+                        'gyroAttProbY', 'gyroAttProbZ')
 
-  scandict = findprobsforscantimes(scantimes, probs)
+    scandict = findprobsforscantimes(scantimes, probs)
 
-  teststat = -1.*Log.PROCEDURE(Double1d(scandict['gyroAttProbX'])*\
-                  Double1d(scandict['gyroAttProbY'])*\
-                  Double1d(scandict['gyroAttProbZ']))
+    teststat = -1.*Log.PROCEDURE(Double1d(scandict['gyroAttProbX'])*\
+                                 Double1d(scandict['gyroAttProbY'])*\
+                                 Double1d(scandict['gyroAttProbZ']))
 
-  scandict['fullprob'] = 1.-GammaP(3.)(teststat)
+    scandict['fullprob'] = 1.-GammaP(3.)(teststat)
 
-  numtimesteps = len(scandict['obt'])
+    numtimesteps = len(scandict['obt'])
 
-  # masked pixels have a mask value of True
-  onlygoodprobs = Bool3d(32, 64, numtimesteps, False)
+    # masked pixels have a mask value of True
+    onlygoodprobs = Bool3d(32, 64, numtimesteps, False)
 
-  for i in xrange(numtimesteps):
-    if scandict['fullprob'][i] < probthresh:
-      onlygoodprobs[:,:,i] = True
+    for i in xrange(numtimesteps):
+      if scandict['fullprob'][i] < probthresh:
+        onlygoodprobs[:,:,i] = True
 
-  frames.addMaskType('goodprobs', 'only the good pointing probs')
-  frames.setMask('goodprobs', onlygoodprobs)
+    frames.addMaskType('badprobs', 'mask is true if prob is bad')
+    frames.setMask('badprobs', onlygoodprobs)
 
-  frames.mergeMasks(String1d(["SATURATION", "goodprobs"]), 'forunihipe')
+    level1.averaged.getCamera(camera).product.replace(0, frames)
   
-  level1.averaged.getCamera(camera).product.replace(0, frames)
-  
-  obs.level1 = level1
+    obs.level1 = level1
 
-  saveObservation(obs, poolName = poolname)
+    saveObservation(obs, poolName = poolname)
+    
+  else:
+  
+    print 'This observation contains a gyro prob mask'
   
   return
