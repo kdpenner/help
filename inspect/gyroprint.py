@@ -34,7 +34,7 @@ def gyroprint(poolname, rm_turnaround = True):
     try:
 
       # X = direction of motion, Y and Z = the important probs for the map
-      probs = getpointcol(obs.auxiliary.pointing, 'obt', 'gyroAttProbX', 'gyroAttProbY', 'gyroAttProbZ')
+      probs = getpointcol(obs.auxiliary.pointing, 'obt', 'gyroAttProbX', 'gyroAttProbY', 'gyroAttProbZ', 'isSlew', 'isOnTarget')
 
     except IndexError:
 
