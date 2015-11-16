@@ -53,7 +53,6 @@ def addgyroprobmask(obs, camera, probthresh = 1.e-4):
         index_low = bisect_left(scantimes, probs['obt'][i])
         index_high = bisect_left(scantimes, probs['obt'][i+1])
         onlygoodprobs[:,:,index_low:index_high] = True
-        print 'found'
 
     frames.addMaskType('badprobs', 'mask is true if prob is bad')
     frames.setMask('badprobs', onlygoodprobs)

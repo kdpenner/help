@@ -81,7 +81,20 @@ def L20_filterScanSpeed_kp(obs, camera):
 #
   frames = scanamorphosBaselinePreprocessing(frames)
 
+  if camera == "blue":
+    if PhotHelper.isParallelObs(obs):
+      pixsize = 3.2
+    else:
+      pixsize = 2.
+    highpassradius = 15
+  else:
+    pixsize = 3.2
+    highpassradius = 25
+
+  frames = highpassFilter(frames, highpassradius, interpolateMaskedValues = True)
+
   System.gc()
+   
 #
 # Filter on scan speed (parameter at the top)
   frames = runfilteronscanspeed(frames)
@@ -107,7 +120,37 @@ def L20_filterScanSpeed_kp(obs, camera):
 #frames  = filterOnScanSpeed(frames,lowScanSpeed=lowscanspeed,highScanSpeed=highscanspeed)
 #
 #System.gc()
-#
+
+  scanindices = frames['Status']['ScanLineNumber'].data
+
+  numscanlegs = max(scanindices)
+  numtimesteps = len(scanindices)
+
+  for i in xrange(1, numscanlegs):
+  
+    selectindices = scanindices.where(scanindices == i)
+
+    # masked pixels have a mask value of True
+    onlyselectindices = Bool3d(32, 64, numtimesteps, True)
+
+    onlyselectindices[:,:,selectindices] = False
+    
+    frames.removeMask('onescan')
+    frames.addMaskType('onescan', 'only the ith scan')
+    frames.setMask('onescan', onlyselectindices)
+  
+    map, mi = photProject(frames, calTree = calTree, outputPixelsize = pixsize)
+
+    coverage = map['coverage'].data
+
+    cov_ind = coverage.where(coverage == 0.)
+
+    map['image'].data[cov_ind] = Double.NaN
+
+    map = centerRaDecMetaData(map)
+
+  
+
 # 
 # Add some Quality information to the frames 
   frames = addQualityInformation(frames)

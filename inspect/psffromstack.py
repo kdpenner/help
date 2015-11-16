@@ -16,9 +16,18 @@ def translatetopix(catradec, imgfile, extent_arcsec):
 
   file = fits.open(imgfile)
   
-  img = file[0]
+  try:
+    img = file['image']
+  except KeyError:
+    try:
+      img = file['wrapped']
+    except KeyError:
+      img = file[0]
 
-  imgwcs = WCS(img.header)
+  try:
+    imgwcs = WCS(img.header)
+  except AttributeError:
+    raise
 
   xlocs, ylocs = catradec.to_pixel(imgwcs, origin = 0)
   
@@ -162,11 +171,16 @@ def fitpsf(psf, *center):
   y_mean = y_center, x_stddev = x_stddev, y_stddev = y_stddev, \
   theta = theta, fixed = fixed, bounds = bounds)
   
+  p_const_init = models.Const2D(amplitude = 0.)
+  
   fit_p = fitting.LevMarLSQFitter()
   
   gridy, gridx = numpy.mgrid[0:psf.shape[0]:1, 0:psf.shape[1]:1]
   
-  p = fit_p(p_init, gridx, gridy, psf)
+  p = fit_p(p_init+p_const_init, gridx, gridy, psf)
+  
+  if not numpy.any(fit_p.fit_info['param_cov']):
+    p = None
   
   return p
   
@@ -179,23 +193,29 @@ def plotpsffit(psf, fit = None):
   else:
     p = fit
   
-  for outparam in p.param_names:
-    print outparam, '{0:.4f}'.format(getattr(p, outparam).value)
+  try:
 
-  psfmin = psf.min()
-  psfmax = psf.max()
+    for outparam in p.param_names:
 
-  plt.subplot(221)
-  plt.imshow(psf, vmin = psfmin, vmax = psfmax, origin = 'lower')
-  plt.colorbar()
-  plt.subplot(222)
-  plt.imshow(p(gridx, gridy), vmin = psfmin, vmax = psfmax, origin = 'lower')
-  plt.colorbar()
-  plt.subplot(223)
-  plt.imshow(psf - p(gridx, gridy), origin = 'lower')
-  plt.colorbar()
-  plt.show()
-  
+      print outparam, '{0:.4f}'.format(getattr(p, outparam).value)
+      
+    psfmin = psf.min()
+    psfmax = psf.max()
+
+    plt.subplot(221)
+    plt.imshow(psf, vmin = psfmin, vmax = psfmax, origin = 'lower')
+    plt.colorbar()
+    plt.subplot(222)
+    plt.imshow(p(gridx, gridy), vmin = psfmin, vmax = psfmax, origin = 'lower')
+    plt.colorbar()
+    plt.subplot(223)
+    plt.imshow(psf - p(gridx, gridy), origin = 'lower')
+    plt.colorbar()
+    plt.show()
+    
+  except:
+    pass
+
 #  plt.plot(psf[9, :], 'ro')
 #  plt.plot(p(gridx, gridy)[9, :], 'k--')
 #  plt.show()
@@ -212,21 +232,35 @@ def main():
   catfname = home+'/Documents/validatemap/xmmlss/xmmlss_wp4_mips24_may2015.fits'
   
   cat = Table.read(catfname)
+
+#  cat = Table.read(home+'/Documents/validatemap/xmmlss/mymap/run1/hipe_daophot_buildpsf', \
+#  comment = '#', format = 'ascii')
   
   ra = cat['RA']
   dec = cat['Dec']
+
+#  ra = cat['ra']
+#  dec = cat['dec']
   
   catradec = SkyCoord(ra, dec, unit = (ra.unit, dec.unit), frame = 'icrs')
+
+#  catradec = SkyCoord(ra, dec, unit = 'deg', frame = 'icrs')
   
 #  catradec = catradec[20026]
 
-  imgfname = home+'/Documents/validatemap/xmmlss/'+\
-  'HerMES_PACS_level6_XMM_LSS_SWIRE_100um_EdoIbar_Unimap_img_wgls.fits'
+#  imgfname = home+'/Documents/validatemap/xmmlss/'+\
+#  'mymap/run1/img_gls.fits'
 
 #  imgfname = home+'/Documents/validatemap/xmmlss/'+\
 #  'HerMES_PACS_level4_UDS_100um_EdoIbar_Unimap_img_wgls.fits'
 
-  xlocs, ylocs, numpixs, img = translatetopix(catradec, imgfname, 18)
+  imgfname = home+'/Documents/removetest/gls_gooddata_gyro.fits'
+
+#  imgfname = home+'/Documents/psffromstacktest/simimg.fits'
+
+#  imgfname = home+'/Documents/correctscans/scan1.fits'
+
+  xlocs, ylocs, numpixs, img = translatetopix(catradec, imgfname, 32)
   
   mask = (numpy.round(xlocs) > numpixs[1]) & \
   (numpy.round(xlocs) < img.shape[1]-numpixs[1]) & \
@@ -241,20 +275,24 @@ def main():
   simplemed, shiftmed, splinemed = psffromstack(simple, shift, spline, 'median')
   simpleavg, shiftavg, splineavg = psffromstack(simple, shift, spline, 'mean')
   plotpsf(simplemed, shiftmed, splinemed, simpleavg, shiftavg, splineavg)
+  print 'PSF fit: simplemed'
   plotpsffit(simplemed)
+  print 'PSF fit: shiftmed'
   shiftmedfit = fitpsf(shiftmed)
   
-#  shiftmedfit.amplitude = 1./2./numpy.pi/shiftmedfit.x_stddev/shiftmedfit.y_stddev
+#  shiftmedfit.amplitude_0 = 1./2./numpy.pi/shiftmedfit.x_stddev_0/shiftmedfit.y_stddev_0
 #  gridy, gridx = numpy.mgrid[0:19:1, 0:19:1]
-#  shiftmedfit.x_mean = 9.
-#  shiftmedfit.y_mean = 9.
+#  shiftmedfit.x_mean_0 = 9.
+#  shiftmedfit.y_mean_0 = 9.
+#  shiftmedfit.amplitude_1 = 0.
 #  writepsf = shiftmedfit(gridx, gridy)
 #  hdu = fits.PrimaryHDU(writepsf)
 #  hdu.writeto('shiftmedpsf.fits')
   
   plotpsffit(shiftmed, fit = shiftmedfit)
+  print 'PSF fit: splinemed'
   plotpsffit(splinemed)
-  
+  print 'PSF fit: simpleavg'
   plotpsffit(simpleavg)
 
 #  set_trace()
