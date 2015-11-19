@@ -10,24 +10,11 @@ from scipy.interpolate import RectBivariateSpline
 from scipy.ndimage.interpolation import shift
 from astropy.modeling import models, fitting
 from os.path import expanduser
-from pdb import set_trace
+import sys
 
-def translatetopix(catradec, imgfile, extent_arcsec):
+def translatetopix(catradec, img, extent_arcsec):
 
-  file = fits.open(imgfile)
-  
-  try:
-    img = file['image']
-  except KeyError:
-    try:
-      img = file['wrapped']
-    except KeyError:
-      img = file[0]
-
-  try:
-    imgwcs = WCS(img.header)
-  except AttributeError:
-    raise
+  imgwcs = WCS(img.header)
 
   xlocs, ylocs = catradec.to_pixel(imgwcs, origin = 0)
   
@@ -47,9 +34,6 @@ def getstack(xlocs, ylocs, numpixs, img):
   
   xgrids = numpy.round(xlocs)
   ygrids = numpy.round(ylocs)
-
-#  xlocs += 0.5
-#  ylocs += 0.5
 
   dimstack = numpy.append(2*numpixs, xlocs.size)
 
@@ -74,11 +58,6 @@ def getstack(xlocs, ylocs, numpixs, img):
 
         ynew = numpy.arange(ylocs[i]-ygrids[i], ylocs[i]-ygrids[i]+2*numpixs[0], 1)
         xnew = numpy.arange(xlocs[i]-xgrids[i], xlocs[i]-xgrids[i]+2*numpixs[1], 1)
-
-#    obsgrid = numpy.mgrid[0:2*numpixs[0]:1, 0:2*numpixs[1]:1]
-
-#    wantgrid = numpy.mgrid[ylocs[i]-ygrids[i]:(ylocs[i]-ygrids[i]+2*numpixs[0]):1, \
-#    xlocs[i]-xgrids[i]:(xlocs[i]-xgrids[i]+2*numpixs[1]):1]
 
         result1 = shift(extract, [ygrids[i]-ylocs[i], xgrids[i]-xlocs[i]], \
         mode = 'nearest')
@@ -216,16 +195,16 @@ def plotpsffit(psf, fit = None):
   except:
     pass
 
-#  plt.plot(psf[9, :], 'ro')
-#  plt.plot(p(gridx, gridy)[9, :], 'k--')
-#  plt.show()
-  
-#  plt.plot(psf[9, :] - p(gridx, gridy)[9, :], 'ro')
-#  plt.show()
-  
   return
   
 def main():
+
+  args = sys.argv[1:]
+  
+  if args[0] == '--hipe':
+    imgfname = args[1]
+    file = fits.open(imgfname)
+    img = file['wrapped']
 
   home = expanduser('~')
 
@@ -254,13 +233,23 @@ def main():
 #  imgfname = home+'/Documents/validatemap/xmmlss/'+\
 #  'HerMES_PACS_level4_UDS_100um_EdoIbar_Unimap_img_wgls.fits'
 
-  imgfname = home+'/Documents/removetest/gls_gooddata_gyro.fits'
+#  imgfname = home+'/Documents/removetest/gls_gooddata_gyro.fits'
 
 #  imgfname = home+'/Documents/psffromstacktest/simimg.fits'
 
 #  imgfname = home+'/Documents/correctscans/scan1.fits'
 
-  xlocs, ylocs, numpixs, img = translatetopix(catradec, imgfname, 32)
+#  file = fits.open(imgfname)
+  
+#  try:
+#    img = file['image']
+#  except KeyError:
+#    try:
+#      img = file['wrapped']
+#    except KeyError:
+#      img = file[0]
+
+  xlocs, ylocs, numpixs, img = translatetopix(catradec, img, 32)
   
   mask = (numpy.round(xlocs) > numpixs[1]) & \
   (numpy.round(xlocs) < img.shape[1]-numpixs[1]) & \
@@ -273,11 +262,13 @@ def main():
   simple, shift, spline = getstack(xlocs1, ylocs1, numpixs, img)
 
   simplemed, shiftmed, splinemed = psffromstack(simple, shift, spline, 'median')
-  simpleavg, shiftavg, splineavg = psffromstack(simple, shift, spline, 'mean')
-  plotpsf(simplemed, shiftmed, splinemed, simpleavg, shiftavg, splineavg)
-  print 'PSF fit: simplemed'
-  plotpsffit(simplemed)
-  print 'PSF fit: shiftmed'
+#  simpleavg, shiftavg, splineavg = psffromstack(simple, shift, spline, 'mean')
+#  plotpsf(simplemed, shiftmed, splinemed, simpleavg, shiftavg, splineavg)
+#  print 'PSF fit: simplemed'
+#  plotpsffit(simplemed)
+#  print 'PSF fit: shiftmed'
+
+  plotpsf(shiftmed)
   shiftmedfit = fitpsf(shiftmed)
   
 #  shiftmedfit.amplitude_0 = 1./2./numpy.pi/shiftmedfit.x_stddev_0/shiftmedfit.y_stddev_0
@@ -289,13 +280,17 @@ def main():
 #  hdu = fits.PrimaryHDU(writepsf)
 #  hdu.writeto('shiftmedpsf.fits')
   
-  plotpsffit(shiftmed, fit = shiftmedfit)
-  print 'PSF fit: splinemed'
-  plotpsffit(splinemed)
-  print 'PSF fit: simpleavg'
-  plotpsffit(simpleavg)
+#  plotpsffit(shiftmed, fit = shiftmedfit)
+#  print 'PSF fit: splinemed'
+#  plotpsffit(splinemed)
+#  print 'PSF fit: simpleavg'
+#  plotpsffit(simpleavg)
 
 #  set_trace()
+
+  print shiftmedfit
+  
+  plotpsffit(shiftmed, fit = shiftmedfit)
 
 if __name__ == "__main__":
   main()
