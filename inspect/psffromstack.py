@@ -9,8 +9,9 @@ from matplotlib import pyplot as plt
 from scipy.interpolate import RectBivariateSpline
 from scipy.ndimage.interpolation import shift
 from astropy.modeling import models, fitting
-from os.path import expanduser
+import os.path
 import sys
+from pdb import set_trace
 
 def translatetopix(catradec, img, extent_arcsec):
 
@@ -24,7 +25,7 @@ def translatetopix(catradec, img, extent_arcsec):
 
   numpixs = numpy.ceil(extent_arcsec/pixsizes)
   
-  return xlocs, ylocs, numpixs, img
+  return xlocs, ylocs, numpixs
 
 
 def getstack(xlocs, ylocs, numpixs, img):
@@ -156,7 +157,7 @@ def fitpsf(psf, *center):
   
   gridy, gridx = numpy.mgrid[0:psf.shape[0]:1, 0:psf.shape[1]:1]
   
-  p = fit_p(p_init+p_const_init, gridx, gridy, psf)
+  p = fit_p(p_init+p_const_init, gridx, gridy, psf, maxiter = 200)
   
   if not numpy.any(fit_p.fit_info['param_cov']):
     p = None
@@ -205,8 +206,13 @@ def main():
     imgfname = args[1]
     file = fits.open(imgfname)
     img = file['wrapped']
+    outdir = os.path.dirname(imgfname)
+  else:
+    imgfname = args[0]
+    file = fits.open(imgfname)
+    img = file[0]
 
-  home = expanduser('~')
+  home = os.path.expanduser('~')
 
   catfname = home+'/Documents/validatemap/xmmlss/xmmlss_wp4_mips24_may2015.fits'
   
@@ -220,6 +226,8 @@ def main():
 
 #  ra = cat['ra']
 #  dec = cat['dec']
+  
+  halfofsquarewidth = 32
   
   catradec = SkyCoord(ra, dec, unit = (ra.unit, dec.unit), frame = 'icrs')
 
@@ -249,7 +257,7 @@ def main():
 #    except KeyError:
 #      img = file[0]
 
-  xlocs, ylocs, numpixs, img = translatetopix(catradec, img, 32)
+  xlocs, ylocs, numpixs = translatetopix(catradec, img, halfofsquarewidth)
   
   mask = (numpy.round(xlocs) > numpixs[1]) & \
   (numpy.round(xlocs) < img.shape[1]-numpixs[1]) & \
@@ -286,11 +294,15 @@ def main():
 #  print 'PSF fit: simpleavg'
 #  plotpsffit(simpleavg)
 
-#  set_trace()
-
-  print shiftmedfit
-  
   plotpsffit(shiftmed, fit = shiftmedfit)
+
+  if outdir:
+    imgwcs = WCS(img.header)
+    pixsizes = imgwcs.wcs.cdelt
+    shifts = (numpixs - numpy.array([shiftmedfit.x_mean_0.value, shiftmedfit.y_mean_0.value]))*pixsizes
+    shifts[0] = shifts[0]*numpy.cos(img.header['crval2']/180.*numpy.pi)
+    numpy.savetxt(outdir+'/shifts.txt', shifts, fmt = '%e', newline = ' ')
+
 
 if __name__ == "__main__":
   main()

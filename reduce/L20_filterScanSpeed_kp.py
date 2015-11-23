@@ -82,10 +82,10 @@ def L20_filterScanSpeed_kp(obs, camera):
   frames = scanamorphosBaselinePreprocessing(frames)
 
   if camera == "blue":
-    if PhotHelper.isParallelObs(obs):
-      pixsize = 3.2
-    else:
-      pixsize = 2.
+#    if PhotHelper.isParallelObs(obs):
+#      pixsize = 3.2
+#    else:
+    pixsize = 2.
     highpassradius = 15
   else:
     pixsize = 3.2
