@@ -300,7 +300,7 @@ def main():
     imgwcs = WCS(img.header)
     pixsizes = imgwcs.wcs.cdelt
     shifts = (numpixs - numpy.array([shiftmedfit.x_mean_0.value, shiftmedfit.y_mean_0.value]))*pixsizes
-    shifts[0] = shifts[0]*numpy.cos(img.header['crval2']/180.*numpy.pi)
+#    shifts[0] = shifts[0]*numpy.cos(img.header['crval2']/180.*numpy.pi)
     numpy.savetxt(outdir+'/shifts.txt', shifts, fmt = '%e', newline = ' ')
 
 
