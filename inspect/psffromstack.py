@@ -202,6 +202,8 @@ def main():
 
   args = sys.argv[1:]
   
+  outdir = None
+  
   if args[0] == '--hipe':
     imgfname = args[1]
     file = fits.open(imgfname)
@@ -211,6 +213,7 @@ def main():
     imgfname = args[0]
     file = fits.open(imgfname)
     img = file[0]
+    outdir = os.path.dirname(imgfname)
 
   home = os.path.expanduser('~')
 
@@ -222,7 +225,7 @@ def main():
 #  comment = '#', format = 'ascii')
   
   ra = cat['RA']
-  dec = cat['Dec']
+  dec = cat['Dec'] + 64.
 
 #  ra = cat['ra']
 #  dec = cat['dec']
@@ -300,7 +303,7 @@ def main():
     imgwcs = WCS(img.header)
     pixsizes = imgwcs.wcs.cdelt
     shifts = (numpixs - numpy.array([shiftmedfit.x_mean_0.value, shiftmedfit.y_mean_0.value]))*pixsizes
-#    shifts[0] = shifts[0]*numpy.cos(img.header['crval2']/180.*numpy.pi)
+    shifts[0] = shifts[0]/numpy.cos(img.header['crval2']/180.*numpy.pi)
     numpy.savetxt(outdir+'/shifts.txt', shifts, fmt = '%e', newline = ' ')
 
 
