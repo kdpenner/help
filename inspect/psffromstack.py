@@ -202,18 +202,18 @@ def main():
 
   args = sys.argv[1:]
   
-  outdir = None
+  outfilename = None
   
   if args[0] == '--hipe':
     imgfname = args[1]
     file = fits.open(imgfname)
     img = file['wrapped']
-    outdir = os.path.dirname(imgfname)
+    outfilename = args[2]
   else:
     imgfname = args[0]
     file = fits.open(imgfname)
     img = file[0]
-    outdir = os.path.dirname(imgfname)
+    outfilename = args[2]
 
   home = os.path.expanduser('~')
 
@@ -279,7 +279,7 @@ def main():
 #  plotpsffit(simplemed)
 #  print 'PSF fit: shiftmed'
 
-  plotpsf(shiftmed)
+#  plotpsf(shiftmed)
   shiftmedfit = fitpsf(shiftmed)
   
 #  shiftmedfit.amplitude_0 = 1./2./numpy.pi/shiftmedfit.x_stddev_0/shiftmedfit.y_stddev_0
@@ -297,14 +297,14 @@ def main():
 #  print 'PSF fit: simpleavg'
 #  plotpsffit(simpleavg)
 
-  plotpsffit(shiftmed, fit = shiftmedfit)
+#  plotpsffit(shiftmed, fit = shiftmedfit)
 
-  if outdir:
+  if outfilename:
     imgwcs = WCS(img.header)
     pixsizes = imgwcs.wcs.cdelt
     shifts = (numpixs - numpy.array([shiftmedfit.x_mean_0.value, shiftmedfit.y_mean_0.value]))*pixsizes
     shifts[0] = shifts[0]/numpy.cos(img.header['crval2']/180.*numpy.pi)
-    numpy.savetxt(outdir+'/shifts.txt', shifts, fmt = '%e', newline = ' ')
+    numpy.savetxt(outfilename, shifts, fmt = '%e', newline = ' ')
 
 
 if __name__ == "__main__":
