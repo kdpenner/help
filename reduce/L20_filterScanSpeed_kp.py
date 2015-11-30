@@ -164,10 +164,8 @@ def L20_filterScanSpeed_kp(obs, camera):
     cov_ind = coverage.where(coverage == 0.)
     map['image'].data[cov_ind] = Double.NaN
     map = centerRaDecMetaData(map)
-    simpleFitsWriter(product = map['image'], file = dir_pre+'scan'+strobsid+'.fits')
-    
     strobsid = str(obs.obsid)
-    
+    simpleFitsWriter(product = map['image'], file = dir_pre+'scan'+strobsid+'.fits')
     os.system(c1_pre+'Documents/help/inspect/psffromstack.py --hipe '+dir_pre+'scan'+strobsid+'.fits '+dir_pre+'shifts'+strobsid+'.txt')
 
 # 
