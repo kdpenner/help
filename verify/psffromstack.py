@@ -11,7 +11,6 @@ from scipy.ndimage.interpolation import shift
 from astropy.modeling import models, fitting
 import os.path
 import sys
-from pdb import set_trace
 
 def translatetopix(catradec, img, extent_arcsec):
 
@@ -25,7 +24,7 @@ def translatetopix(catradec, img, extent_arcsec):
 
   numpixs = numpy.ceil(extent_arcsec/pixsizes)
   
-  return xlocs, ylocs, numpixs
+  return xlocs, ylocs, numpixs, imgwcs
 
 
 def getstack(xlocs, ylocs, numpixs, img):
@@ -202,35 +201,33 @@ def main():
 
   args = sys.argv[1:]
   
-  outfilename = None
+  if not args:
+    print 'Usage: psffromstack [--hipe] img_file_name catalog_file_name'
+    sys.exit(1)
   
   if args[0] == '--hipe':
     imgfname = args[1]
     file = fits.open(imgfname)
     img = file['wrapped']
-    outfilename = args[2]
+    catfname = args[2]
   else:
     imgfname = args[0]
     file = fits.open(imgfname)
     img = file[0]
-    outfilename = args[2]
+    catfname = args[1]
 
-  home = os.path.expanduser('~')
-
-  catfname = home+'/Documents/validatemap/xmmlss/xmmlss_wp4_mips24_may2015.fits'
-  
   cat = Table.read(catfname)
 
 #  cat = Table.read(home+'/Documents/validatemap/xmmlss/mymap/run1/hipe_daophot_buildpsf', \
 #  comment = '#', format = 'ascii')
   
   ra = cat['RA']
-  dec = cat['Dec'] + 64.
+  dec = cat['Dec']
 
 #  ra = cat['ra']
 #  dec = cat['dec']
   
-  halfofsquarewidth = 32
+  halfofsquarewidth = 33
   
   catradec = SkyCoord(ra, dec, unit = (ra.unit, dec.unit), frame = 'icrs')
 
@@ -238,29 +235,7 @@ def main():
   
 #  catradec = catradec[20026]
 
-#  imgfname = home+'/Documents/validatemap/xmmlss/'+\
-#  'mymap/run1/img_gls.fits'
-
-#  imgfname = home+'/Documents/validatemap/xmmlss/'+\
-#  'HerMES_PACS_level4_UDS_100um_EdoIbar_Unimap_img_wgls.fits'
-
-#  imgfname = home+'/Documents/removetest/gls_gooddata_gyro.fits'
-
-#  imgfname = home+'/Documents/psffromstacktest/simimg.fits'
-
-#  imgfname = home+'/Documents/correctscans/scan1.fits'
-
-#  file = fits.open(imgfname)
-  
-#  try:
-#    img = file['image']
-#  except KeyError:
-#    try:
-#      img = file['wrapped']
-#    except KeyError:
-#      img = file[0]
-
-  xlocs, ylocs, numpixs = translatetopix(catradec, img, halfofsquarewidth)
+  xlocs, ylocs, numpixs, imgwcs = translatetopix(catradec, img, halfofsquarewidth)
   
   mask = (numpy.round(xlocs) > numpixs[1]) & \
   (numpy.round(xlocs) < img.shape[1]-numpixs[1]) & \
@@ -274,12 +249,11 @@ def main():
 
   simplemed, shiftmed, splinemed = psffromstack(simple, shift, spline, 'median')
 #  simpleavg, shiftavg, splineavg = psffromstack(simple, shift, spline, 'mean')
-#  plotpsf(simplemed, shiftmed, splinemed, simpleavg, shiftavg, splineavg)
-#  print 'PSF fit: simplemed'
-#  plotpsffit(simplemed)
-#  print 'PSF fit: shiftmed'
 
-#  plotpsf(shiftmed)
+#  plotpsf(simplemed, shiftmed, splinemed, simpleavg, shiftavg, splineavg)
+
+  plotpsf(shiftmed)
+
   shiftmedfit = fitpsf(shiftmed)
   
 #  shiftmedfit.amplitude_0 = 1./2./numpy.pi/shiftmedfit.x_stddev_0/shiftmedfit.y_stddev_0
@@ -291,21 +265,7 @@ def main():
 #  hdu = fits.PrimaryHDU(writepsf)
 #  hdu.writeto('shiftmedpsf.fits')
   
-#  plotpsffit(shiftmed, fit = shiftmedfit)
-#  print 'PSF fit: splinemed'
-#  plotpsffit(splinemed)
-#  print 'PSF fit: simpleavg'
-#  plotpsffit(simpleavg)
-
-#  plotpsffit(shiftmed, fit = shiftmedfit)
-
-  if outfilename:
-    imgwcs = WCS(img.header)
-    pixsizes = imgwcs.wcs.cdelt
-    shifts = (numpixs - numpy.array([shiftmedfit.x_mean_0.value, shiftmedfit.y_mean_0.value]))*pixsizes
-    shifts[0] = shifts[0]/numpy.cos(img.header['crval2']/180.*numpy.pi)
-    numpy.savetxt(outfilename, shifts, fmt = '%e', newline = ' ')
-
+  plotpsffit(shiftmed, fit = shiftmedfit)
 
 if __name__ == "__main__":
   main()

@@ -55,6 +55,7 @@ from runfilteronscanspeed import runfilteronscanspeed
 import os
 from herschel.ia.toolbox.util import SimpleFitsWriterTask
 simpleFitsWriter = SimpleFitsWriterTask()
+import help
 
 def L20_filterScanSpeed_kp(obs, camera):
 
@@ -166,7 +167,7 @@ def L20_filterScanSpeed_kp(obs, camera):
     map = centerRaDecMetaData(map)
     strobsid = str(obs.obsid)
     simpleFitsWriter(product = map['image'], file = dir_pre+'scan'+strobsid+'.fits')
-    os.system(c1_pre+'Documents/help/inspect/psffromstack.py --hipe '+dir_pre+'scan'+strobsid+'.fits '+dir_pre+'shifts'+strobsid+'.txt')
+    os.system(os.path.dirname(help.__file__)+'/inspect/psffromstack.py --hipe '+dir_pre+'scan'+strobsid+'.fits '+dir_pre+'shifts'+strobsid+'.txt')
 
 # 
 # Add some Quality information to the frames 
