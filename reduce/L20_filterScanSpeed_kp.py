@@ -167,7 +167,6 @@ def L20_filterScanSpeed_kp(obs, camera):
     map = centerRaDecMetaData(map)
     strobsid = str(obs.obsid)
     simpleFitsWriter(product = map['image'], file = dir_pre+'scan'+strobsid+'.fits')
-    os.system(os.path.dirname(help.__file__)+'/inspect/psffromstack.py --hipe '+dir_pre+'scan'+strobsid+'.fits '+dir_pre+'shifts'+strobsid+'.txt')
 
 # 
 # Add some Quality information to the frames 

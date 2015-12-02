@@ -5,7 +5,7 @@
 
 # or set here each parameters and then excute the task as did in the following lines: 
 
-from help import getallobscontexts
+import help
 from datetime import datetime
 import os
 import sys
@@ -25,9 +25,9 @@ from plugin import UniHipeTask
 
 uniHipe = UniHipeTask()
 
-def unimap_batch_kp(poolname, camera):
+def unimap_batch_kp(poolname, camera, catfname):
 
-  obses = getallobscontexts(poolname)
+  obses = help.getallobscontexts(poolname)
 
   for obs in obses:
 
@@ -160,6 +160,10 @@ def unimap_batch_kp(poolname, camera):
     uniHipe(obsidList = obsidList, poolName = poolname, execUniHipe = execUniHipe, \
     execUniMap = execUnimap, batchExec = batchExec, inOutDir = inOutDir, \
     type = type, instrument = instrument, store = store, tag = tag)
+
+    strobsid = str(obsidList[0])
     
     shutil.move(inOutDir+'/'+tag+'/'+camera+'/unimap_meta_'+camera+'.dat', \
-    inOutDir+'/'+tag+'/'+camera+'/unimap_meta_'+camera+str(obsidList[0])+'.dat')
+    inOutDir+'/'+tag+'/'+camera+'/unimap_meta_'+camera+strobsid+'.dat')
+    
+    os.system(os.path.dirname(help.__file__)+'/reduce/alignmap.py --hipe '+dir_pre+'correctscans/scan'+strobsid+'.fits '+catfname+' '+dir_pre+'correctscans/shifts'+strobsid+'.txt '+inOutDir+'/'+tag+'/'+camera+'/unimap_obsid_'+tag+'_'+camera+'_'+strobsid+'.fits')

@@ -11,7 +11,7 @@ def main():
   args = sys.argv[1:]
   
   if not args:
-    print 'Usage: alignmap [--hipe] img_file_name catalog_file_name output_file_name'
+    print 'Usage: alignmap [--hipe] img_file_loc catalog_file_loc shifts_file_loc unimap_file_loc'
     sys.exit(1)
     
   if args[0] == '--hipe':
@@ -20,12 +20,14 @@ def main():
     img = file['wrapped']
     catfname = args[2]
     outfname = args[3]
+    unifname = args[4]
   else:
     imgfname = args[0]
     file = fits.open(imgfname)
     img = file[0]
     catfname = args[1]
     outfname = args[2]
+    unifname = args[3]
 
   cat = Table.read(catfname)
 
@@ -64,6 +66,13 @@ def main():
   shifts[raind] = shifts[raind]/numpy.cos(pixvals[decind]/180.*numpy.pi)
   numpy.savetxt(outfname, numpy.atleast_2d(shifts), fmt = '%e', \
   header = ' '.join(pixtypes))
+
+  unimap = fits.open(unifname)
+  
+  unimap['Ra'].data += shifts[raind]
+  unimap['Dec'].data += shifts[decind]
+  
+  unimap.writeto(unifname, clobber = True)
 
 if __name__ == "__main__":
   main()

@@ -4,7 +4,7 @@ from herschel.ia.numeric import Bool3d
 from herschel.ia.numeric import Double1d
 from herschel.ia.numeric import String1d
 from herschel.pacs.spg.pipeline.SaveProductToObservationContext import *
-from help.inspect import getpointcol
+from help.verify import getpointcol
 from herschel.ia.toolbox.util.jython import saveObservation
 from bisect import bisect_left
 
