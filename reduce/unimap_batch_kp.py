@@ -25,11 +25,13 @@ from plugin import UniHipeTask
 
 uniHipe = UniHipeTask()
 
-def unimap_batch_kp(poolname, camera, catfname):
+def unimap_batch_kp(obs, camera, catfname):
 
-  obses = help.getallobscontexts(poolname)
+#  obses = help.getallobscontexts(poolname)
 
-  for obs in obses:
+#  for obs in obses:
+
+    poolname = 'uds1'
 
 ######### PARAMETER SETTING ##########
 
