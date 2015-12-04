@@ -11,8 +11,10 @@ def main():
   args = sys.argv[1:]
   
   if not args:
-    print 'Usage: alignmap [--hipe] img_file_loc catalog_file_loc shifts_file_loc unimap_file_loc'
+    print 'Usage: alignmap [--hipe] img_file_loc catalog_file_loc shifts_file_loc [--unimap unimap_file_loc]'
     sys.exit(1)
+    
+  unifname = None
     
   if args[0] == '--hipe':
     imgfname = args[1]
@@ -20,14 +22,16 @@ def main():
     img = file['wrapped']
     catfname = args[2]
     outfname = args[3]
-    unifname = args[4]
+    if args[4]:
+      unifname = args[5]
   else:
     imgfname = args[0]
     file = fits.open(imgfname)
     img = file[0]
     catfname = args[1]
     outfname = args[2]
-    unifname = args[3]
+    if len(args) > 3:
+      unifname = args[4]
 
   cat = Table.read(catfname)
 
@@ -67,12 +71,14 @@ def main():
   numpy.savetxt(outfname, numpy.atleast_2d(shifts), fmt = '%e', \
   header = ' '.join(pixtypes))
 
-  unimap = fits.open(unifname)
+  if unifname:
+
+    unimap = fits.open(unifname)
   
-  unimap['Ra'].data += shifts[raind]
-  unimap['Dec'].data += shifts[decind]
+    unimap['Ra'].data += shifts[raind]
+    unimap['Dec'].data += shifts[decind]
   
-  unimap.writeto(unifname, clobber = True)
+    unimap.writeto(unifname, clobber = True)
 
 if __name__ == "__main__":
   main()
