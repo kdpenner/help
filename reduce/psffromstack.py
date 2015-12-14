@@ -227,7 +227,7 @@ def main():
 #  ra = cat['ra']
 #  dec = cat['dec']
   
-  halfofsquarewidth = 33
+  halfofsquarewidth = 32
   
   catradec = SkyCoord(ra, dec, unit = (ra.unit, dec.unit), frame = 'icrs')
 

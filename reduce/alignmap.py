@@ -1,6 +1,6 @@
 #!/usr/bin/env python -tt
 
-from verify.psffromstack import *
+from psffromstack import *
 import sys
 from astropy.io import fits
 from astropy.table import Table

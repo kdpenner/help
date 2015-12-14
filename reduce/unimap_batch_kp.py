@@ -166,4 +166,4 @@ def unimap_batch_kp(poolname, camera, catfname):
     shutil.move(inOutDir+'/'+tag+'/'+camera+'/unimap_meta_'+camera+'.dat', \
     inOutDir+'/'+tag+'/'+camera+'/unimap_meta_'+camera+strobsid+'.dat')
     
-    os.system(os.path.dirname(help.__file__)+'/reduce/alignmap.py --hipe '+dir_pre+'correctscans/scan'+strobsid+'.fits '+catfname+' '+dir_pre+'correctscans/shifts'+strobsid+'.txt --unimap '+inOutDir+'/'+tag+'/'+camera+'/unimap_obsid_'+tag+'_'+camera+'_'+strobsid+'.fits')
+    os.system('python '+os.path.dirname(help.__file__)+'/reduce/alignmap.py --hipe '+dir_pre+'correctscans/scan'+strobsid+'.fits '+catfname+' '+dir_pre+'correctscans/shifts'+strobsid+'.txt --unimap '+inOutDir+'/'+tag+'/'+camera+'/unimap_obsid_'+tag+'_'+camera+'_'+strobsid+'.fits')
