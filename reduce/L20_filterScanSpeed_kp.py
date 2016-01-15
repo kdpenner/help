@@ -92,6 +92,11 @@ def L20_filterScanSpeed_kp(obs, camera):
 #
     frames = scanamorphosBaselinePreprocessing(frames)
 
+#
+# Filter on scan speed
+    frames = runfilteronscanspeed(frames)
+
+
     if camera == "blue":
 #    if PhotHelper.isParallelObs(obs):
 #      pixsize = 3.2
@@ -102,13 +107,9 @@ def L20_filterScanSpeed_kp(obs, camera):
       pixsize = 3.2
       highpassradius = 25
 
-    frames = highpassFilter(frames, highpassradius, interpolateMaskedValues = True)
+    frames_hpf = highpassFilter(frames, highpassradius, copy = True, interpolateMaskedValues = True)
 
     System.gc()
-   
-#
-# Filter on scan speed
-    frames = runfilteronscanspeed(frames)
 
 #
 # spatial deglitching now after just before photProject SPRs PACS-3522 &
@@ -160,7 +161,7 @@ def L20_filterScanSpeed_kp(obs, camera):
 #  frames.removeMask('onescan')
 #  frames.addMaskType('onescan', 'only the ith scan')
 #  frames.setMask('onescan', onlyselectindices)
-    map, mi = photProject(frames, calTree = calTree, outputPixelsize = pixsize)
+    map, mi = photProject(frames_hpf, calTree = calTree, outputPixelsize = pixsize)
     coverage = map['coverage'].data
     cov_ind = coverage.where(coverage == 0.)
     map['image'].data[cov_ind] = Double.NaN
