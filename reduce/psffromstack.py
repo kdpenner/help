@@ -20,9 +20,7 @@ def translatetopix(catradec, img, extent_arcsec):
   
   xlocs, ylocs = numpy.atleast_1d(xlocs, ylocs)
 
-  sizearr = imgwcs.wcs.get_pc()
-
-  pixsizes = abs(numpy.array([sizearr[0][0], sizearr[1][1]]))*3600.
+  pixsizes = abs(imgwcs.wcs.cdelt)*3600.
 
   numpixs = numpy.ceil(extent_arcsec/pixsizes)
   
