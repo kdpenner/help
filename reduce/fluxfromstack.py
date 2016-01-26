@@ -71,8 +71,8 @@ def main():
     flux = 2.*numpy.pi*shiftmedfit.amplitude_0*shiftmedfit.x_stddev_0*shiftmedfit.y_stddev_0
     flux *= numpy.abs(numpy.prod(imgwcs.wcs.cdelt))
     if 'MJy' in img.header['BUNIT']:
-      flux *= 1.e6*u.Jy/u.sr*u.arcsec*u.arcsec
-      flux = flux.to('nJy')
+      flux *= 1.e6*u.Jy/u.sr*u.deg*u.deg
+      flux = flux.to('mJy')
     fluxes100[i] = flux.value
     
   print fluxes100
