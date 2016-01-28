@@ -7,6 +7,8 @@ from astropy.table import Table
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 import numpy
+import matplotlib.pyplot as plt
+import math
 
 def main():
 
@@ -29,6 +31,7 @@ def main():
 
   cat = cat[mask_goodsrc]
   cat.sort(['F_WISE_W1'])
+  cat['F_WISE_W1'] = cat['F_WISE_W1'].to('mJy')
   raunit = cat['RA'].unit
   decunit = cat['Dec'].unit
 
@@ -38,9 +41,12 @@ def main():
   
   split_minicat = numpy.array_split(minicat, n_bins)
   fluxes100 = numpy.zeros(n_bins)
+  fluxes3p4 = numpy.zeros(n_bins)
 
   halfofsquarewidth = 32
   
+  plt.rcParams['figure.figsize'] = [18., 18.]
+
   for i in xrange(n_bins):
   
     ras = split_minicat[i]['RA']
@@ -74,8 +80,30 @@ def main():
       flux *= 1.e6*u.Jy/u.sr*u.deg*u.deg
       flux = flux.to('mJy')
     fluxes100[i] = flux.value
+    fluxes3p4[i] = numpy.median(split_minicat[i]['F_WISE_W1'])
     
+    plt.subplot(3, 4, i+1)
+    plt.imshow(shiftmed, origin = 'lower')
+    plt.colorbar()
+
   print fluxes100
+
+  fig = plt.gcf()
+  
+  ax = fig.add_subplot(3, 1, 3)
+  
+  ax.plot(fluxes3p4, fluxes100, marker = 'o')
+
+  ax.set_xlabel('Median 3.4um flux density (mJy)')
+  ax.set_ylabel('Stacked 100um flux density (mJy, unimap)')
+
+  ax.set_xscale('log')
+  ax.set_yscale('log')
+
+  plt.savefig(outfname)
+
+  plt.close()
+
   
 if __name__ == "__main__":
   main()
