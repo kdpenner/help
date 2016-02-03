@@ -37,7 +37,7 @@ def main():
 
   minicat = cat[['F_WISE_W1', 'RA', 'Dec']].as_array()
 
-  n_bins = 8
+  n_bins = 14
   
   split_minicat = numpy.array_split(minicat, n_bins)
   fluxes100 = numpy.zeros(n_bins)
@@ -82,7 +82,9 @@ def main():
     fluxes100[i] = flux.value
     fluxes3p4[i] = numpy.median(split_minicat[i]['F_WISE_W1'])
     
-    plt.subplot(3, 4, i+1)
+    numyplots = numpy.int(numpy.ceil(n_bins/4.)+1)
+    
+    plt.subplot(numyplots, 4, i+1)
     plt.imshow(shiftmed, origin = 'lower')
     plt.colorbar()
 
@@ -90,7 +92,7 @@ def main():
 
   fig = plt.gcf()
   
-  ax = fig.add_subplot(3, 1, 3)
+  ax = fig.add_subplot(numyplots, 1, numyplots)
   
   ax.plot(fluxes3p4, fluxes100, marker = 'o')
 
