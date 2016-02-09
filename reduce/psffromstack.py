@@ -181,14 +181,16 @@ def plotpsffit(psf, fit = None):
     psfmin = psf.min()
     psfmax = psf.max()
 
+    model = p(gridx, gridy)
+
     plt.subplot(221)
     plt.imshow(psf, vmin = psfmin, vmax = psfmax, origin = 'lower')
     plt.colorbar()
     plt.subplot(222)
-    plt.imshow(p(gridx, gridy), vmin = psfmin, vmax = psfmax, origin = 'lower')
+    plt.imshow(model, vmin = psfmin, vmax = psfmax, origin = 'lower')
     plt.colorbar()
     plt.subplot(223)
-    plt.imshow(psf - p(gridx, gridy), origin = 'lower')
+    plt.imshow(psf - model, origin = 'lower')
     plt.colorbar()
     plt.show()
     
@@ -197,12 +199,39 @@ def plotpsffit(psf, fit = None):
 
   return
   
+def savepsf(psf, psffit, imgheader, stackfname, modelfname):
+
+  xsize_odd = numpy.int(psf.shape[0])/2*2+1
+  ysize_odd = numpy.int(psf.shape[1])/2*2+1
+
+  header = fits.Header()
+  header['CTYPE1'] = "RA---TAN"
+  header['CTYPE2'] = "DEC--TAN"
+  header['CDELT1'] = imgheader['CDELT1']
+  header['CDELT2'] = imgheader['CDELT2']
+
+  hdu1 = fits.PrimaryHDU(header = header, data = psf)
+  
+  hdu1.writeto(stackfname)
+  
+  psffit.amplitude_0 = 1./2./numpy.pi/psffit.x_stddev_0/psffit.y_stddev_0
+  gridy, gridx = numpy.mgrid[0:xsize_odd:1, 0:ysize_odd:1]
+  psffit.x_mean_0 = (xsize_odd-1.)/2.
+  psffit.y_mean_0 = (ysize_odd-1.)/2.
+  psffit.amplitude_1 = 0.
+  modelpsf = psffit(gridx, gridy)
+  hdu2 = fits.PrimaryHDU(header = header, data = modelpsf)
+  hdu2.writeto(modelfname)
+  
+  return
+  
+
 def main():
 
   args = sys.argv[1:]
   
   if not args:
-    print 'Usage: psffromstack [--hipe] img_file_name catalog_file_name'
+    print 'Usage: psffromstack [--hipe] img_file_name catalog_file_name stacked_psf_file_name model_psf_file_name'
     sys.exit(1)
   
   if args[0] == '--hipe':
@@ -210,11 +239,15 @@ def main():
     file = fits.open(imgfname)
     img = file['wrapped']
     catfname = args[2]
+    stackfname = args[3]
+    modelfname = args[4]
   else:
     imgfname = args[0]
     file = fits.open(imgfname)
     img = file[0]
     catfname = args[1]
+    stackfname = args[2]
+    modelfname = args[3]
 
   cat = Table.read(catfname)
 
@@ -226,6 +259,8 @@ def main():
 
 #  ra = cat['ra']
 #  dec = cat['dec']
+  
+#  The parameter halfofsquarewidth has units of arcsec  
   
   halfofsquarewidth = 32
   
@@ -256,16 +291,9 @@ def main():
 
   shiftmedfit = fitpsf(shiftmed)
   
-#  shiftmedfit.amplitude_0 = 1./2./numpy.pi/shiftmedfit.x_stddev_0/shiftmedfit.y_stddev_0
-#  gridy, gridx = numpy.mgrid[0:19:1, 0:19:1]
-#  shiftmedfit.x_mean_0 = 9.
-#  shiftmedfit.y_mean_0 = 9.
-#  shiftmedfit.amplitude_1 = 0.
-#  writepsf = shiftmedfit(gridx, gridy)
-#  hdu = fits.PrimaryHDU(writepsf)
-#  hdu.writeto('shiftmedpsf.fits')
-  
   plotpsffit(shiftmed, fit = shiftmedfit)
+  
+  savepsf(shiftmed, shiftmedfit, img.header, stackfname, modelfname)
 
 if __name__ == "__main__":
   main()

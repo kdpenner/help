@@ -12,12 +12,13 @@ def main():
   args = sys.argv[1:]
   
   if not args:
-    print 'Usage: positionvalidation prior_catalog_loc blind_catalog_loc plot_loc'
+    print 'Usage: positionvalidation prior_catalog_loc blind_catalog_loc sep_arcsec plot_loc'
     sys.exit(1)
 
   priorfname = args[0]
   blindfname = args[1]
-  outfname = args[2]
+  separation = numpy.int(args[2])
+  outfname = args[3]
 
   prior = Table.read(priorfname)
 
@@ -29,7 +30,7 @@ def main():
                          unit = 'deg')
 
   idprior, idblind, dist2, dist3 = blindcoords.search_around_sky(priorcoords, \
-                                                                 2*u.arcsec)
+                                                            separation*u.arcsec)
   dist2 = dist2.to('arcsec')
   angle_eastofnorth = priorcoords[idprior].position_angle(blindcoords[idblind])
 

@@ -26,22 +26,17 @@ def main():
 
   cat = Table.read(catfname)
 
-  mask_goodsrc = (cat['Detection_WISE_W1'] == 1) & (cat['PhotCase_WISE_W1'] == 1) & \
-  (numpy.char.count(cat['ph_qual'], 'A') > 0)
-
-  cat = cat[mask_goodsrc]
-  cat.sort(['F_WISE_W1'])
-  cat['F_WISE_W1'] = cat['F_WISE_W1'].to('mJy')
   raunit = cat['RA'].unit
   decunit = cat['Dec'].unit
+  fluxunitstr = cat['Flux_density'].unit.to_string()
 
-  minicat = cat[['F_WISE_W1', 'RA', 'Dec']].as_array()
+  cat = cat.as_array()
 
   n_bins = 14
   
-  split_minicat = numpy.array_split(minicat, n_bins)
-  fluxes100 = numpy.zeros(n_bins)
-  fluxes3p4 = numpy.zeros(n_bins)
+  split_cat = numpy.array_split(cat, n_bins)
+  fluxes_herschel = numpy.zeros(n_bins)
+  fluxes_stack = numpy.zeros(n_bins)
 
   halfofsquarewidth = 32
   
@@ -49,8 +44,8 @@ def main():
 
   for i in xrange(n_bins):
   
-    ras = split_minicat[i]['RA']
-    decs = split_minicat[i]['Dec']
+    ras = split_cat[i]['RA']
+    decs = split_cat[i]['Dec']
 
     catradec = SkyCoord(ras, decs, unit = (raunit, decunit), frame = 'icrs')
 
@@ -79,8 +74,8 @@ def main():
     if 'MJy' in img.header['BUNIT']:
       flux *= 1.e6*u.Jy/u.sr*u.deg*u.deg
       flux = flux.to('mJy')
-    fluxes100[i] = flux.value
-    fluxes3p4[i] = numpy.median(split_minicat[i]['F_WISE_W1'])
+    fluxes_herschel[i] = flux.value
+    fluxes_stack[i] = numpy.median(split_cat[i]['Flux_density'])
     
     numyplots = numpy.int(numpy.ceil(n_bins/4.)+1)
     
@@ -88,16 +83,16 @@ def main():
     plt.imshow(shiftmed, origin = 'lower')
     plt.colorbar()
 
-  print fluxes100
+#  print fluxes100
 
   fig = plt.gcf()
   
   ax = fig.add_subplot(numyplots, 1, numyplots)
   
-  ax.plot(fluxes3p4, fluxes100, marker = 'o')
+  ax.plot(fluxes_stack, fluxes_herschel, marker = 'o')
 
-  ax.set_xlabel('Median 3.4um flux density (mJy)')
-  ax.set_ylabel('Stacked 100um flux density (mJy, unimap)')
+  ax.set_xlabel('Median flux density of priors ('+fluxunitstr+')')
+  ax.set_ylabel('Stacked flux density (mJy, unimap)')
 
   ax.set_xscale('log')
   ax.set_yscale('log')
