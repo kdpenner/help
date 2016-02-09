@@ -167,7 +167,7 @@ def L20_filterScanSpeed_kp(obs, camera):
     map['image'].data[cov_ind] = Double.NaN
     map = centerRaDecMetaData(map)
     strobsid = str(obs.obsid)
-    simpleFitsWriter(product = map['image'], file = dir_pre+'scan'+strobsid+'.fits')
+    simpleFitsWriter(product = map['image'], file = dir_pre+'scan'+strobsid+camera+'.fits')
 
 # 
 # Add some Quality information to the frames 
