@@ -3,6 +3,7 @@
 from astropy.table import Table
 from astropy.io import fits
 from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_scales
 from astropy.coordinates import SkyCoord
 import numpy
 from matplotlib import pyplot as plt
@@ -20,7 +21,7 @@ def translatetopix(catradec, img, extent_arcsec):
   
   xlocs, ylocs = numpy.atleast_1d(xlocs, ylocs)
 
-  pixsizes = abs(imgwcs.wcs.cdelt)*3600.
+  pixsizes = proj_plane_pixel_scales(imgwcs)*3600.
 
   numpixs = numpy.ceil(extent_arcsec/pixsizes)
   
@@ -204,11 +205,13 @@ def savepsf(psf, psffit, imgheader, stackfname, modelfname):
   xsize_odd = numpy.int(psf.shape[0])/2*2+1
   ysize_odd = numpy.int(psf.shape[1])/2*2+1
 
+  imgwcs = WCS(imgheader)
+
   header = fits.Header()
-  header['CTYPE1'] = "RA---TAN"
-  header['CTYPE2'] = "DEC--TAN"
-  header['CDELT1'] = imgheader['CDELT1']
-  header['CDELT2'] = imgheader['CDELT2']
+  header['CTYPE1'] = imgheader['CTYPE1']
+  header['CTYPE2'] = imgheader['CTYPE2']
+  header['CDELT1'] = imgwcs.pixel_scale_matrix[0][0]
+  header['CDELT2'] = imgwcs.pixel_scale_matrix[1][1]
 
   hdu1 = fits.PrimaryHDU(header = header, data = psf)
   
