@@ -10,7 +10,7 @@ import numpy
 import matplotlib.pyplot as plt
 import math
 
-def goodlocations(img, catradec, fluxarr, halfofsquarewidth):
+def goodindices(img, catradec, halfofsquarewidth):
 
   xlocs, ylocs, numpixs, imgwcs = translatetopix(catradec, img, halfofsquarewidth)
 
@@ -19,21 +19,18 @@ def goodlocations(img, catradec, fluxarr, halfofsquarewidth):
   (numpy.round(ylocs) < img.shape[0]-numpixs[0]) & \
   (numpy.round(ylocs) > numpixs[0])
 
-  xlocs1 = xlocs[mask_inregion]
-  ylocs1 = ylocs[mask_inregion]
-  fluxarr1 = fluxarr[mask_inregion]
-
-  return xlocs1, ylocs1, fluxarr1, numpixs, imgwcs
+  return mask_inregion, xlocs, ylocs, numpixs, imgwcs
 
 
-def getfluxes(x, y, flux, n_bins, numpixs, img, imgwcs):
+def getfluxes(xpos, ypos, fluxval, n_bins, numpixs, img, imgwcs):
 
-  split_x = numpy.array_split(x, n_bins)
-  split_y = numpy.array_split(y, n_bins)
-  split_flux = numpy.array_split(flux, n_bins)
+  split_x = numpy.array_split(xpos, n_bins)
+  split_y = numpy.array_split(ypos, n_bins)
+  split_flux = numpy.array_split(fluxval, n_bins)
 
-  fluxes_herschel = numpy.zeros(n_bins)
   fluxes_stack = numpy.zeros(n_bins)
+  fluxes_catalog = numpy.zeros(n_bins)
+  psfs_stack = numpy.zeros((numpixs[0]*2., numpixs[1]*2., n_bins))
 
   for i in xrange(n_bins):
 
@@ -55,11 +52,39 @@ def getfluxes(x, y, flux, n_bins, numpixs, img, imgwcs):
       flux *= u.Jy
       flux = flux.to('mJy')
       mapstr = 'jscan'
-    fluxes_herschel[i] = flux.value
-    fluxes_stack[i] = numpy.median(split_flux[i])
+    fluxes_stack[i] = flux.value
+    fluxes_catalog[i] = numpy.median(split_flux[i])
+    psfs_stack[:,:,i] = shiftmed
 
-  return fluxes_herschel, fluxes_stack
+  return fluxes_stack, fluxes_catalog, psfs_stack, mapstr
 
+def plotfluxflux(flux_xaxis, flux_yaxis, img_stacks, n_bins, mapstr, fluxunitstr, outfname):
+
+  plt.rcParams['figure.figsize'] = [18., 18.]
+
+  numyplots = numpy.int(numpy.ceil(n_bins/4.)+1)
+
+  for i in xrange(n_bins):
+
+    plt.subplot(numyplots, 4, i+1)
+    plt.imshow(img_stacks[:,:,i], origin = 'lower')
+    plt.colorbar()
+
+  fig = plt.gcf()
+  
+  ax = fig.add_subplot(numyplots, 1, numyplots)
+  
+  ax.plot(flux_xaxis, flux_yaxis, marker = 'o')
+
+  ax.set_xlabel('Median flux density of priors ('+fluxunitstr+')')
+  ax.set_ylabel('Stacked flux density (mJy, '+mapstr+')')
+
+  ax.set_xscale('log')
+  ax.set_yscale('log')
+
+  plt.savefig(outfname)
+
+  plt.close()
 
 def main():
 
@@ -81,56 +106,24 @@ def main():
   decunit = cat['Dec'].unit
   fluxunitstr = cat['Flux_density'].unit.to_string()
 
-  flux = cat['Flux_density'].to_array()
+  fluxs = cat['Flux_density'].data
 
   catradec = SkyCoord(cat['RA'], cat['Dec'], unit = (raunit, decunit), frame = 'icrs')
 
   halfofsquarewidth = 32
 
-  x, y, unmaskflux, numpixs, imgwcs = goodlocations(img, catradec, flux, halfofsquarewidth)
+  indices, xs, ys, numpixarr, wcs = goodindices(img, catradec, halfofsquarewidth)
+
+  goodxs = xs[indices]
+  goodys = ys[indices]
+  goodfluxs = fluxs[indices]
 
   n_bins = 14
   
+  stacked_fluxes, catalog_fluxes, stacks, label = getfluxes(goodxs, goodys, goodfluxs, n_bins, numpixarr, img, wcs)
 
+  plotfluxflux(catalog_fluxes, stacked_fluxes, stacks, n_bins, label, fluxunitstr, outfname)
 
-  getfluxes(x, y, unmaskflux, n_bins, numpixs, img, imgwcs)
-  
-
-
-  
-  plt.rcParams['figure.figsize'] = [18., 18.]
-
-
-
-
-
-
-    
-    numyplots = numpy.int(numpy.ceil(n_bins/4.)+1)
-    
-    plt.subplot(numyplots, 4, i+1)
-    plt.imshow(shiftmed, origin = 'lower')
-    plt.colorbar()
-
-#  print fluxes100
-
-  fig = plt.gcf()
-  
-  ax = fig.add_subplot(numyplots, 1, numyplots)
-  
-  ax.plot(fluxes_stack, fluxes_herschel, marker = 'o')
-
-  ax.set_xlabel('Median flux density of priors ('+fluxunitstr+')')
-  ax.set_ylabel('Stacked flux density (mJy, '+mapstr+')')
-
-  ax.set_xscale('log')
-  ax.set_yscale('log')
-
-  plt.savefig(outfname)
-
-  plt.close()
-
-  
 if __name__ == "__main__":
   main()
 
