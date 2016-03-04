@@ -22,7 +22,7 @@ def main():
     img = file['wrapped']
     catfname = args[2]
     outfname = args[3]
-    if args[4]:
+    if len(args) > 4:
       unifname = args[5]
   else:
     imgfname = args[0]
