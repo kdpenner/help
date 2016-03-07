@@ -132,7 +132,7 @@ def L05_phot_kp(obs, camera):
 #
 # ------------------------------------------------------------------------------------
 # Extract the calibration tree 
-  calTree = getCalTree(obs = obs)
+  calTree = obs.calibration
 #
 # interactive user: apply following:
 #calTree = getCalTree(obs=obs)

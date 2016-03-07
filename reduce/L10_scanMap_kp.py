@@ -50,7 +50,7 @@ from herschel.pacs.spg.all        import *
 from herschel.ia.pal              import ProductRef
 from herschel.pacs.share.util     import PacsProductSinkWrapper
 from herschel.pacs.spg.common     import correctRaDec4Sso
-from herschel.pacs.spg.pipeline.SaveProductToObservationContext import *
+#from herschel.pacs.spg.pipeline.SaveProductToObservationContext import *
 from herschel.pacs.cal.all import getCalTree
 
 def L10_scanMap_kp(obs, camera):
@@ -72,7 +72,7 @@ def L10_scanMap_kp(obs, camera):
 #
 # ------------------------------------------------------------------------------------
 # Extract the calibration tree 
-  calTree = getCalTree(obs=obs)
+  calTree = obs.calibration
 #
 # interactive user: you may apply following e.g. to get the most recent calibration
 #calTree = getCalTree(obs=obs)
@@ -160,7 +160,7 @@ def L10_scanMap_kp(obs, camera):
   frames = photTevCorrection(frames, calTree=calTree, hk=photHk)
 #
 #
-  obs = savePhotProductToObsContextL1(obs, "HPPT" , camera, frames)
+  obs = updatePacsObservation(obs, 1.0, frames)
 
   saveObservation(obs, poolName = poolname)
 
