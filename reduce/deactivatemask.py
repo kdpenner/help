@@ -21,8 +21,6 @@ def deactivatemask(poolname, camera):
       
       frames.removeMask('badprobs')
       
-      level1.averaged.getCamera(camera).product.replace(0, frames)
-      
       obs = updatePacsObservation(obs, 1.0, frames)
       
       saveObservation(obs, poolName = poolname)
