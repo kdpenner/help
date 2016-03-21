@@ -1,4 +1,10 @@
 import help
+from herschel.pacs.spg.pipeline.SaveProductToObservationContext import *
+from herschel.ia.toolbox.util.jython import saveObservation
+from herschel.pacs.spg.common import ActivateMasksTask
+from herschel.pacs.spg.pipeline import UpdatePacsObservationTask
+activateMasks = ActivateMasksTask()
+updatePacsObservation = UpdatePacsObservationTask()
 
 def deactivatemask(poolname, camera):
 
