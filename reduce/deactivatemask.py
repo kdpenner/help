@@ -17,7 +17,7 @@ def deactivatemask(poolname, camera):
     1342188073, 1342188074]:
 
       level1 = PacsContext(obs.level1)
-      frames = level1.averaged.getCamera(camera).product.getScience(0)
+      frames = level1.averaged.getCamera(camera).product
       
       frames.removeMask('badprobs')
       
