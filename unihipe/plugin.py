@@ -324,7 +324,7 @@ class UniHipeTask(Task, ExternalHelp):
 							dim_samples.append(results[0][0].dimensions[0])
 					else:
 						########################
-						frames = PacsContext(obs.level1).averaged.getCamera(camera).product.selectAll()
+						frames = PacsContext(obs.level1).averaged.getCamera(camera).product
 						calTree=getCalTree()
 						if (database == 'HSA' or database == "Local Store"): calTree = getCalTree(obs=obs)
 						results = unimap_pacs(frames,calTree,camera)
