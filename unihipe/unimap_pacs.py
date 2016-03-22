@@ -23,13 +23,21 @@ def unimap_pacs(frames,calTree,camera=''):
         pix_size = 6.4
         n_row = 16
 
-    gyroprob = frames.getMask('badprobs')[0,0,:]
+    if 'badprobs' in frames.activeMaskNames:
+    
+      gyroprob = frames.getMask('badprobs')[0,0,:]
 
     # when the gyro probability is bad for one bolometer it is bad for all
     # bolometers. we find the bad pointing times only once.
 
-    goodprobs = gyroprob.where(gyroprob == False)
-    goodprobssize = goodprobs.toInt1d().size
+      goodprobs = gyroprob.where(gyroprob == False)
+      goodprobssize = goodprobs.toInt1d().size
+      
+    else:
+
+      goodprobssize = frames['Signal'].data.dimensions[2]
+      goodprobs = Selection(Int1d.range(goodprobssize))
+
 
 
     scanning_flag = Int1d(frames.dimensions[2])
