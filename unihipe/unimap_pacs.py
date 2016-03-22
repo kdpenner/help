@@ -6,6 +6,7 @@ def unimap_pacs(frames,calTree,camera=''):
     from herschel.ia.numeric import Bool2d
     from herschel.ia.numeric import Int2d
     from herschel.ia.numeric import Range
+    from herschel.ia.numeric import Selection
     from herschel.pacs.spg.phot import photAssignRaDec
     from herschel.pacs.signal.context import PacsContext
     from herschel.pacs.cal import PacsCal
