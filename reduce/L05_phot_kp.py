@@ -184,7 +184,7 @@ def L05_phot_kp(obs, camera):
 # Save the slicedFrames to ObservationContext (overwrite !)
   obs = savePhotProductToObsContextL05(obs, "HPPT" , camera, slicedFrames)
 
-  saveObservation(obs, poolName = poolname)
+  saveObservation(obs, poolName = poolname, saveCalTree = True)
 
 #
 # delete some variables

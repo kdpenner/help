@@ -61,7 +61,7 @@ def addgyroprobmask(obs, camera, probthresh = 1.e-4):
   
     obs.level1 = level1
 
-    saveObservation(obs, poolName = poolname)
+    saveObservation(obs, poolName = poolname, saveCalTree = True)
     
   else:
   

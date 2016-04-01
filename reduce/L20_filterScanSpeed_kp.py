@@ -195,6 +195,6 @@ def L20_filterScanSpeed_kp(obs, camera):
 
     obs.level1 = level1
 
-    saveObservation(obs, poolName = poolname)
+    saveObservation(obs, poolName = poolname, saveCalTree = True)
 
   return

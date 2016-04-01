@@ -162,7 +162,7 @@ def L10_scanMap_kp(obs, camera):
 #
   obs = updatePacsObservation(obs, 1.0, frames)
 
-  saveObservation(obs, poolName = poolname)
+  saveObservation(obs, poolName = poolname, saveCalTree = True)
 
 # Remove some variables
   del level0, level0_5, frames, photHk, timeCorr, pp, orbitEphem, horizonsProduct, sso
