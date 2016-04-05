@@ -75,11 +75,11 @@ def L20_filterScanSpeed_kp(obs, camera):
   level1 = PacsContext(obs.level1)
   frames = level1.averaged.getCamera(camera).product.getScience(0)
 
-  if not frames.containsMask('badprobs'):
+#  if not frames.containsMask('badprobs'):
 
-    print 'Run addgyroprobmask before running this script'
+#    print 'Run addgyroprobmask before running this script'
 
-  else:
+#  else:
 
 # ******************************************************************************
 #         Processing

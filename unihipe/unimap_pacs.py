@@ -24,6 +24,8 @@ def unimap_pacs(frames,calTree,camera=''):
         pix_size = 6.4
         n_row = 16
 
+    frames = frames.refs[0].product
+
     if 'badprobs' in frames.activeMaskNames:
     
       gyroprob = frames.getMask('badprobs')[0,0,:]
