@@ -86,30 +86,30 @@ def L20_filterScanSpeed_kp(obs, camera):
 # ******************************************************************************
 # Flag jump/module drop outs
 #
-    frames = scanamorphosMaskLongTermGlitches(frames, stepAfter=20)
+  frames = scanamorphosMaskLongTermGlitches(frames, stepAfter=20)
 #
 # Flag calibration block decays
 #
-    frames = scanamorphosBaselinePreprocessing(frames)
+  frames = scanamorphosBaselinePreprocessing(frames)
 
 #
 # Filter on scan speed
-    frames = runfilteronscanspeed(frames)
+  frames = runfilteronscanspeed(frames)
 
 
-    if camera == "blue":
+  if camera == "blue":
 #    if PhotHelper.isParallelObs(obs):
 #      pixsize = 3.2
 #    else:
-      pixsize = 2.
-      highpassradius = 15
-    else:
-      pixsize = 3.2
-      highpassradius = 25
+    pixsize = 2.
+    highpassradius = 15
+  else:
+    pixsize = 3.2
+    highpassradius = 25
 
-    frames_hpf = highpassFilter(frames, highpassradius, copy = True, interpolateMaskedValues = True)
+  frames_hpf = highpassFilter(frames, highpassradius, copy = True, interpolateMaskedValues = True)
 
-    System.gc()
+  System.gc()
 
 #
 # spatial deglitching now after just before photProject SPRs PACS-3522 &
@@ -142,16 +142,16 @@ def L20_filterScanSpeed_kp(obs, camera):
 #  numscanlegs = max(scanindices)
 #  numtimesteps = len(scanindices)
 
-    c1 = LocalStoreContext()
-    c1_pre = c1.getStoreDir().toString().split('.hcss/')[0]
+  c1 = LocalStoreContext()
+  c1_pre = c1.getStoreDir().toString().split('.hcss/')[0]
 
-    dir_pre = c1_pre+'correctscans/'
+  dir_pre = c1_pre+'correctscans/'
 
-    if not os.path.exists(dir_pre):
-      print 'Creating directory:'
-      print dir_pre
-      print 'for temp storage of scan leg maps'
-      os.mkdir(dir_pre)
+  if not os.path.exists(dir_pre):
+    print 'Creating directory:'
+    print dir_pre
+    print 'for temp storage of scan leg maps'
+    os.mkdir(dir_pre)
 
 #  for i in xrange(20, 22):
 #  selectindices = scanindices.where(scanindices == i)
@@ -161,17 +161,17 @@ def L20_filterScanSpeed_kp(obs, camera):
 #  frames.removeMask('onescan')
 #  frames.addMaskType('onescan', 'only the ith scan')
 #  frames.setMask('onescan', onlyselectindices)
-    map, mi = photProject(frames_hpf, calTree = calTree, outputPixelsize = pixsize)
-    coverage = map['coverage'].data
-    cov_ind = coverage.where(coverage == 0.)
-    map['image'].data[cov_ind] = Double.NaN
-    map = centerRaDecMetaData(map)
-    strobsid = str(obs.obsid)
-    simpleFitsWriter(product = map['image'], file = dir_pre+'scan'+strobsid+camera+'.fits')
+  map, mi = photProject(frames_hpf, calTree = calTree, outputPixelsize = pixsize)
+  coverage = map['coverage'].data
+  cov_ind = coverage.where(coverage == 0.)
+  map['image'].data[cov_ind] = Double.NaN
+  map = centerRaDecMetaData(map)
+  strobsid = str(obs.obsid)
+  simpleFitsWriter(product = map['image'], file = dir_pre+'scan'+strobsid+camera+'.fits')
 
 # 
 # Add some Quality information to the frames 
-    frames = addQualityInformation(frames)
+  frames = addQualityInformation(frames)
 #
 # Post processing
 # cast the glitch mask back into level 1
@@ -191,10 +191,10 @@ def L20_filterScanSpeed_kp(obs, camera):
 #del lowscanspeed, highscanspeed, speed, ref, med, index
 #del signal_stdev, cutlevel, threshold, HPFmask, s, mdt, image, ad, mi, historyCopy
 
-    level1.averaged.getCamera(camera).product.replace(0, frames)
+  level1.averaged.getCamera(camera).product.replace(0, frames)
 
-    obs.level1 = level1
+  obs.level1 = level1
 
-    saveObservation(obs, poolName = poolname, saveCalTree = True)
+  saveObservation(obs, poolName = poolname, saveCalTree = True)
 
   return
