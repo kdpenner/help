@@ -50,7 +50,6 @@ from herschel.pacs.spg.all        import *
 from herschel.ia.pal              import ProductRef
 from herschel.pacs.share.util     import PacsProductSinkWrapper
 from herschel.pacs.spg.common     import correctRaDec4Sso
-#from herschel.pacs.spg.pipeline.SaveProductToObservationContext import *
 from herschel.pacs.cal.all import getCalTree
 
 def L10_scanMap_kp(obs, camera):
