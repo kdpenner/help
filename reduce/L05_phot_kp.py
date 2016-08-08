@@ -58,7 +58,6 @@ from herschel.pacs.signal import SlicedFrames
 from herschel.pacs.cal import GetPacsCalDataTask
 from herschel.ia.dataset import LongParameter
 from herschel.pacs.spg.all import *
-from herschel.pacs.spg.pipeline.SaveProductToObservationContext import *
 from herschel.ia.toolbox.util import SimpleFitsWriterTask
 from herschel.ia.toolbox.pointing import CalcAttitudeTask
 import os
