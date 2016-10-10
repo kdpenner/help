@@ -69,54 +69,54 @@ def L05_phot_kp(obs, camera):
 
   pp = obs.auxiliary.pointing
   
-  try:
-    pphist = pp.history.getTaskNames().toString()
-  except:
-    pphist = [None]
+#  try:
+#    pphist = pp.history.getTaskNames().toString()
+#  except:
+#    pphist = [None]
 
-  if 'calcAttitude' in pphist:
+#  if 'calcAttitude' in pphist:
 
-    print 'You must not run calcAttitude twice on an observation.'
+#    print 'You must not run calcAttitude twice on an observation.'
     
-    poolname = obs.level0.getCamera(camera).averaged.product.refs[0].urn.split(':')[1]
+#    poolname = obs.level0.getCamera(camera).averaged.product.refs[0].urn.split(':')[1]
 
-  else:
+#  else:
 
-    c1 = LocalStoreContext()
-    c1_pre = c1.getStoreDir().toString()
+#    c1 = LocalStoreContext()
+#    c1_pre = c1.getStoreDir().toString()
 
-    dir_pre = c1_pre.split('.hcss/')[0]+'oldpoint/'
+#    dir_pre = c1_pre.split('.hcss/')[0]+'oldpoint/'
 
-    if not os.path.exists(dir_pre):
-      print 'Creating directory:'
-      print dir_pre
-      print 'for old pointing products'
-      os.mkdir(dir_pre)
-      print 'Saving old pointing product to:'
-      print dir_pre+str(obs.obsid)+'oldpp.fits'
-      simpleFitsWriter(product = pp, file = dir_pre+str(obs.obsid)+'oldpp.fits')
-    else:
-      print 'Saving old pointing product to:'
-      print dir_pre+str(obs.obsid)+'oldpp.fits'
-      simpleFitsWriter(product = pp, file = dir_pre+str(obs.obsid)+'oldpp.fits')
+#    if not os.path.exists(dir_pre):
+#      print 'Creating directory:'
+#      print dir_pre
+#      print 'for old pointing products'
+#      os.mkdir(dir_pre)
+#      print 'Saving old pointing product to:'
+#      print dir_pre+str(obs.obsid)+'oldpp.fits'
+#      simpleFitsWriter(product = pp, file = dir_pre+str(obs.obsid)+'oldpp.fits')
+#    else:
+#      print 'Saving old pointing product to:'
+#      print dir_pre+str(obs.obsid)+'oldpp.fits'
+#      simpleFitsWriter(product = pp, file = dir_pre+str(obs.obsid)+'oldpp.fits')
 
-    poolname = obs.level0.getCamera(camera).averaged.product.refs[0].urn.split(':')[1]
+  poolname = obs.level0.getCamera(camera).averaged.product.refs[0].urn.split(':')[1]
 
 # add extra meta data 
-    pacsEnhanceMetaData(obs)
+  pacsEnhanceMetaData(obs)
 
 # copy meta keywords to level-0 products
-    pacsPropagateMetaKeywords(obs,'0',obs.level0)
+  pacsPropagateMetaKeywords(obs,'0',obs.level0)
 
 #
 # Extract Time Correlation which is used to convert in addUtc
-    timeCorr = obs.auxiliary.timeCorrelation
+#  timeCorr = obs.auxiliary.timeCorrelation
 #
 # Extract the PointingProduct
-    acms = obs.auxiliary.acms
-    tchist = obs.auxiliary.teleCommHistory
-    newpp = calcAttitude(pp, acms, tchist)
-    obs.auxiliary.pointing = newpp
+#  acms = obs.auxiliary.acms
+#  tchist = obs.auxiliary.teleCommHistory
+#  newpp = calcAttitude(pp, acms, tchist)
+#  obs.auxiliary.pointing = newpp
 #
 # ------------------------------------------------------------------------------------
 # Extract out the level0 from the ObservationContext
@@ -153,7 +153,7 @@ def L05_phot_kp(obs, camera):
 #
 # !!! Attention copy =1 is needed not to work straight on level 0 data !!!
 
-  slicedFrames = photAddInstantPointing(slicedFrames, obs.auxiliary.pointing, calTree=calTree, orbitEphem=orbitEphem, horizonsProduct=horizonsProduct, copy=1)
+  slicedFrames = photAddInstantPointing(slicedFrames, pp, calTree=calTree, orbitEphem=orbitEphem, horizonsProduct=horizonsProduct, copy=1)
 #
 # Identify the calibration blocks and fills the CALSOURCE status entry. 
 # This task has been introduced because only the labels are no longer a reliable source of information. 
@@ -165,7 +165,7 @@ def L05_phot_kp(obs, camera):
 # We remove the calibration blocks, because due to commanding error very early scans are interrupted
 # by calibratyion blocks. Before and after is considered a separate slice then.
 # This is deactivated this way and the whole data appear in one slice
-  slicedFrames = removeCalBlocks(slicedFrames,useBbid=1)
+  slicedFrames = removeCalBlocks(slicedFrames,useBbid=1,skipAfter=300)
 #
 #
 # FindBlocks need to run to make the block table which is used by pacsSliceContext then
